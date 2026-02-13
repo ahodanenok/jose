@@ -15,5 +15,5 @@ public interface JwsAlgoritm {
      * @param input JWS Signing Input, not null
      * @returns JWS Signature, never null
      */
-    byte[] sign(String input);
+    byte[] sign(byte[] input);
 }

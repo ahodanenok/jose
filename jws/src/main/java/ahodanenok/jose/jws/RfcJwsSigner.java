@@ -23,7 +23,7 @@ public final class RfcJwsSigner implements JwsSigner {
     }
 
     @Override
-    public byte[] sign(String input, String algorithmName) {
+    public byte[] sign(byte[] input, String algorithmName) {
         JwsAlgoritm algorithm = algorithms.get(algorithmName);
         // todo: error if null
 

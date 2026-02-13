@@ -14,5 +14,5 @@ public interface JwsSigner {
      * @param input JWS Signing Input
      * @param algorithmName algorithm name as defined by JWA
      */
-    byte[] sign(String input, String algorithmName);
+    byte[] sign(byte[] input, String algorithmName);
 }

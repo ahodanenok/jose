@@ -10,7 +10,7 @@ public final class NoneAlgoritm implements JwsAlgoritm {
     }
 
     @Override
-    public byte[] sign(String input) {
+    public byte[] sign(byte[] input) {
         return SIGNATURE;
     }
 }
