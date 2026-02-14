@@ -15,7 +15,7 @@ public final class JwsBuilder {
     private byte[] payload;
     List<JwsHeader> protectedHeaders = new ArrayList<>();
     // todo: unprotected headers
-    private JwsSigner signer;
+    private List<JwsAlgoritm> algorithms;
     private JsonConverter jsonConverter;
 
     public JwsBuilder withPayload(byte[] payload) {
@@ -27,12 +27,22 @@ public final class JwsBuilder {
         return new JwsHeaderDescription(this);
     }
 
-    public JwsBuilder signedBy(JwsSigner signer) {
-        this.signer = Objects.requireNonNull(signer);
+    public JwsBuilder allowAlgorithm(JwsAlgoritm algorithm) {
+        Objects.requireNonNull(algorithm);
+        if (algorithms == null) {
+            algorithms = List.of(algorithm);
+        } else {
+            if (algorithms.size() == 1) {
+                algorithms = new ArrayList<>(algorithms);
+            }
+
+            algorithms.add(algorithm);
+        }
+
         return this;
     }
 
-    public JwsBuilder withJsonConverter(JsonConverter jsonConverter) {
+    public JwsBuilder useJsonConverter(JsonConverter jsonConverter) {
         this.jsonConverter = Objects.requireNonNull(jsonConverter);
         return this;
     }
@@ -48,14 +58,12 @@ public final class JwsBuilder {
             String encodedProtectedHeader = Base64Url.encode(
                 protectedHeaderUsed.asJson(jsonConverter).getBytes(StandardCharsets.UTF_8),
                 false);
-            JwsSigner signerUsed = signer != null ? signer : JwsSigner.getDefault();
 
             // todo: how to represent a jws with no signatures?
             return new JwsOneSignature(
                 payloadUsed,
                 protectedHeaderUsed,
                 computeSignature(
-                    signerUsed,
                     protectedHeaderUsed.getAlgorithm(),
                     encodedProtectedHeader,
                     encodedPayload));
@@ -66,7 +74,6 @@ public final class JwsBuilder {
     }
 
     private byte[] computeSignature(
-            JwsSigner signer,
             String algorithmName,
             String encodedProtectedHeader,
             String encodedPayload) {
@@ -74,8 +81,22 @@ public final class JwsBuilder {
             throw new IllegalStateException("Header parameter 'alg' must be present");
         }
 
-        return signer.sign(
-            (encodedProtectedHeader + "." + encodedPayload).getBytes(StandardCharsets.US_ASCII),
-            algorithmName);
+        JwsAlgoritm algorithmUsed = null;
+        if (algorithms != null) {
+            for (JwsAlgoritm algorithm : algorithms) {
+                if (algorithm.getName().equals(algorithmName)) {
+                    algorithmUsed = algorithm;
+                    break;
+                }
+            }
+        }
+        if (algorithmUsed == null) {
+            throw new IllegalStateException(
+                "Algorithm '%s' is not allowed".formatted(algorithmName));
+        }
+
+        return algorithmUsed.sign(
+            (encodedProtectedHeader + "." + encodedPayload)
+                .getBytes(StandardCharsets.US_ASCII));
     }
 }

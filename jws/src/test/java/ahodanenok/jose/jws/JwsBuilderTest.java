@@ -19,7 +19,8 @@ public class JwsBuilderTest {
             .withHeader()
                 .protectedParams().param("alg", "none").set()
                 .add()
-            .withJsonConverter(new JacksonJsonConverter())
+            .allowAlgorithm(NoneAlgoritm.INSTANCE)
+            .useJsonConverter(new JacksonJsonConverter())
             .create();
         assertArrayEquals(new byte[0], jws.getPayload());
         // todo: check header & signature?
@@ -32,7 +33,8 @@ public class JwsBuilderTest {
             .withHeader()
                 .protectedParams().param("alg", "none").set()
                 .add()
-            .withJsonConverter(new JacksonJsonConverter())
+            .allowAlgorithm(NoneAlgoritm.INSTANCE)
+            .useJsonConverter(new JacksonJsonConverter())
             .create();
         assertArrayEquals(new byte[] { 1, 2, 3 }, jws.getPayload());
         // todo: check header & signature?
@@ -48,7 +50,8 @@ public class JwsBuilderTest {
                     .param("bar", true)
                     .set()
                 .add()
-            .withJsonConverter(new JacksonJsonConverter())
+            .allowAlgorithm(NoneAlgoritm.INSTANCE)
+            .useJsonConverter(new JacksonJsonConverter())
             .create();
 
         assertEquals("none", jws.getProtectedHeader().get("alg"));
