@@ -1,8 +1,7 @@
 package ahodanenok.jose.jws;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Objects;
-import java.util.Map;
 
 public final class JwsHeaderDescription {
 
@@ -26,7 +25,8 @@ public final class JwsHeaderDescription {
 
     public final class ProtectedParams {
 
-        private final Map<String, Object> params = new HashMap<>();
+        // Use LinkedHashMap to allow the generation of json with the same order of params
+        private final LinkedHashMap<String, Object> params = new LinkedHashMap<>();
 
         public ProtectedParams param(String name, Object value) {
             // todo: value nullable?

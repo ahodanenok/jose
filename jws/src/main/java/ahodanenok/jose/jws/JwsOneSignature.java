@@ -7,9 +7,9 @@ class JwsOneSignature implements Jws {
 
     private final byte[] payload;
     private final JwsHeader protectedHeader;
-    private final Object signature;
+    private final byte[] signature;
 
-    JwsOneSignature(byte[] payload, JwsHeader protectedHeader, Object signature) {
+    JwsOneSignature(byte[] payload, JwsHeader protectedHeader, byte[] signature) {
         this.payload = Objects.requireNonNull(payload);
         this.protectedHeader = protectedHeader; // todo: required?
         this.signature = signature; // todo: required?
@@ -39,6 +39,12 @@ class JwsOneSignature implements Jws {
         return List.of(protectedHeader);
     }
 
+    @Override
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    @Override
     public int getSignatureCount() {
         // todo: no signatures?
         return 1;

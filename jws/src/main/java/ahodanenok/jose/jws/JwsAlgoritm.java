@@ -2,6 +2,9 @@ package ahodanenok.jose.jws;
 
 public interface JwsAlgoritm {
 
+    public static final String None = NoneAlgoritm.NAME;
+    public static final String HS256 = HS256Algorithm.NAME;
+
     /**
      * Get algorithm name.
      *

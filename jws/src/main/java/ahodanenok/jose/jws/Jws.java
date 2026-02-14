@@ -41,7 +41,7 @@ public interface Jws {
     // todo: not sure if this method is needed
     List<JwsHeader> getProtectedHeaders();
 
-    // todo: Object setSignature();
+    byte[] getSignature();
     // todo: Object setSignature(int idx);
 
     // todo: not sure if this method is needed
