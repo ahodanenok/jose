@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 
+import ahodanenok.jose.common.Base64Url;
 import ahodanenok.jose.common.JsonConverter;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -28,15 +29,16 @@ public class JwsBuilderTest {
                 .add()
             .allowAlgorithm(new HS256Algorithm(key))
             .useJsonConverter(new JacksonJsonConverter())
+            .serializedAs(JwsSerialization.COMPACT)
             .create();
 
         assertArrayEquals(new byte[0], jws.getPayload());
         assertEquals("HS256", jws.getProtectedHeader().get("alg"));
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(key);
-        assertArrayEquals(
-            mac.doFinal("eyJhbGciOiJIUzI1NiJ9.".getBytes(StandardCharsets.US_ASCII)),
-            jws.getSignature());
+        byte[] signature = mac.doFinal("eyJhbGciOiJIUzI1NiJ9.".getBytes(StandardCharsets.US_ASCII));
+        assertArrayEquals(signature, jws.getSignature());
+        assertEquals("eyJhbGciOiJIUzI1NiJ9.." + Base64Url.encode(signature, false), jws.asString());
     }
 
     @Test
@@ -49,15 +51,16 @@ public class JwsBuilderTest {
                 .add()
             .allowAlgorithm(new HS256Algorithm(key))
             .useJsonConverter(new JacksonJsonConverter())
+            .serializedAs(JwsSerialization.COMPACT)
             .create();
 
         assertArrayEquals(new byte[] { 1, 2, 3 }, jws.getPayload());
         assertEquals("HS256", jws.getProtectedHeader().get("alg"));
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(key);
-        assertArrayEquals(
-            mac.doFinal("eyJhbGciOiJIUzI1NiJ9.AQID".getBytes(StandardCharsets.US_ASCII)),
-            jws.getSignature());
+        byte[] signature = mac.doFinal("eyJhbGciOiJIUzI1NiJ9.AQID".getBytes(StandardCharsets.US_ASCII));
+        assertArrayEquals(signature, jws.getSignature());
+        assertEquals("eyJhbGciOiJIUzI1NiJ9.AQID." + Base64Url.encode(signature, false), jws.asString());
     }
 
     @Test
@@ -75,6 +78,7 @@ public class JwsBuilderTest {
                 .add()
             .allowAlgorithm(new HS256Algorithm(key))
             .useJsonConverter(new JacksonJsonConverter())
+            .serializedAs(JwsSerialization.COMPACT)
             .create();
 
         assertArrayEquals(payload, jws.getPayload());
@@ -83,9 +87,9 @@ public class JwsBuilderTest {
         assertEquals(true, jws.getProtectedHeader().get("bar"));
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(key);
-        assertArrayEquals(
-            mac.doFinal("eyJhbGciOiJIUzI1NiIsImZvbyI6MSwiYmFyIjp0cnVlfQ.SGVsbG8sIHdvcmxkIQ".getBytes(StandardCharsets.US_ASCII)),
-            jws.getSignature());
+        byte[] signature = mac.doFinal("eyJhbGciOiJIUzI1NiIsImZvbyI6MSwiYmFyIjp0cnVlfQ.SGVsbG8sIHdvcmxkIQ".getBytes(StandardCharsets.US_ASCII));
+        assertArrayEquals(signature, jws.getSignature());
+        assertEquals("eyJhbGciOiJIUzI1NiIsImZvbyI6MSwiYmFyIjp0cnVlfQ.SGVsbG8sIHdvcmxkIQ." + Base64Url.encode(signature, false), jws.asString());
     }
 
     private static class JacksonJsonConverter implements JsonConverter {

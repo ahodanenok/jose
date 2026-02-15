@@ -48,4 +48,11 @@ public interface Jws {
     // List<Object> setSignatures();
 
     int getSignatureCount();
+
+    /**
+     * Get a serialized representation of this JWS
+     * 
+     * @see JwsSerialization
+     */
+    String asString();
 }

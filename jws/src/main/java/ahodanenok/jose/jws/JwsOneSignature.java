@@ -8,11 +8,13 @@ class JwsOneSignature implements Jws {
     private final byte[] payload;
     private final JwsHeader protectedHeader;
     private final byte[] signature;
+    private final String serializedForm;
 
-    JwsOneSignature(byte[] payload, JwsHeader protectedHeader, byte[] signature) {
+    JwsOneSignature(byte[] payload, JwsHeader protectedHeader, byte[] signature, String serializedForm) {
         this.payload = Objects.requireNonNull(payload);
         this.protectedHeader = protectedHeader; // todo: required?
         this.signature = signature; // todo: required?
+        this.serializedForm = serializedForm;
     }
 
     @Override
@@ -48,5 +50,10 @@ class JwsOneSignature implements Jws {
     public int getSignatureCount() {
         // todo: no signatures?
         return 1;
+    }
+
+    @Override
+    public String asString() {
+        return serializedForm;
     }
 }

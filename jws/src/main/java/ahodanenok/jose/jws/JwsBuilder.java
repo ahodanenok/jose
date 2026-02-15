@@ -17,6 +17,7 @@ public final class JwsBuilder {
     // todo: unprotected headers
     private List<JwsAlgoritm> algorithms;
     private JsonConverter jsonConverter;
+    private JwsSerialization serialization;
 
     public JwsBuilder withPayload(byte[] payload) {
         this.payload = Objects.requireNonNull(payload);
@@ -42,6 +43,11 @@ public final class JwsBuilder {
         return this;
     }
 
+    public JwsBuilder serializedAs(JwsSerialization serialization) {
+        this.serialization = Objects.requireNonNull(serialization);
+        return this;
+    }
+
     public JwsBuilder useJsonConverter(JsonConverter jsonConverter) {
         this.jsonConverter = Objects.requireNonNull(jsonConverter);
         return this;
@@ -56,17 +62,28 @@ public final class JwsBuilder {
 
             String encodedPayload = Base64Url.encode(payloadUsed, false);
             String encodedProtectedHeader = Base64Url.encode(
-                protectedHeaderUsed.asJson(jsonConverter).getBytes(StandardCharsets.UTF_8),
+                protectedHeaderUsed.asJson(jsonConverter)
+                    .getBytes(StandardCharsets.UTF_8),
                 false);
+            byte[] signature = computeSignature(
+                    protectedHeaderUsed.getAlgorithm(),
+                    encodedProtectedHeader, encodedPayload);
+            String serializedForm = null;
+            if (serialization != null) { // todo: compact by default?
+                serializedForm = switch (serialization) {
+                    case COMPACT -> serializeCompact(
+                        encodedPayload, encodedProtectedHeader, signature);
+                    case JSON -> serializeJson();
+                    case JSON_FLAT -> serializeJsonFlat();
+                };
+            }
 
             // todo: how to represent a jws with no signatures?
             return new JwsOneSignature(
                 payloadUsed,
                 protectedHeaderUsed,
-                computeSignature(
-                    protectedHeaderUsed.getAlgorithm(),
-                    encodedProtectedHeader,
-                    encodedPayload));
+                signature,
+                serializedForm);
         } else {
             // todo: support multiple signatures
             throw new UnsupportedOperationException();
@@ -98,5 +115,20 @@ public final class JwsBuilder {
         return algorithmUsed.sign(
             (encodedProtectedHeader + "." + encodedPayload)
                 .getBytes(StandardCharsets.US_ASCII));
+    }
+
+    private String serializeCompact(
+            String encodedPayload, String encodedProtectedHeader, byte[] signature) {
+        return encodedProtectedHeader
+            + "." + encodedPayload
+            + "." + Base64Url.encode(signature, false);
+    }
+
+    private String serializeJson() {
+        return null; // todo: impl
+    }
+
+    private String serializeJsonFlat() {
+        return null; // todo: impl
     }
 }
