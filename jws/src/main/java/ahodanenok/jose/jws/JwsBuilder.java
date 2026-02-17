@@ -2,6 +2,7 @@ package ahodanenok.jose.jws;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -74,7 +75,8 @@ public final class JwsBuilder {
                     case COMPACT -> serializeCompact(
                         encodedPayload, encodedProtectedHeader, signature);
                     case JSON -> serializeJson();
-                    case JSON_FLAT -> serializeJsonFlat();
+                    case JSON_FLAT -> serializeJsonFlat(
+                        encodedPayload, encodedProtectedHeader, signature);
                 };
             }
 
@@ -119,6 +121,7 @@ public final class JwsBuilder {
 
     private String serializeCompact(
             String encodedPayload, String encodedProtectedHeader, byte[] signature) {
+        // todo: check unprotected header
         return encodedProtectedHeader
             + "." + encodedPayload
             + "." + Base64Url.encode(signature, false);
@@ -128,7 +131,14 @@ public final class JwsBuilder {
         return null; // todo: impl
     }
 
-    private String serializeJsonFlat() {
-        return null; // todo: impl
+    private String serializeJsonFlat(
+            String encodedPayload, String encodedProtectedHeader, byte[] signature) {
+        LinkedHashMap<String, Object> obj = new LinkedHashMap<>();
+        obj.put("payload", encodedPayload);
+        obj.put("protected", encodedProtectedHeader);
+        // todo: unprotected header
+        obj.put("signature", Base64Url.encode(signature, false));
+
+        return jsonConverter.convert(obj);
     }
 }
