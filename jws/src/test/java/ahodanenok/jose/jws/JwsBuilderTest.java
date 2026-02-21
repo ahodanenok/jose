@@ -6,9 +6,6 @@ import java.security.Key;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.Test;
 
 import ahodanenok.jose.common.Base64Url;
@@ -28,7 +25,7 @@ public class JwsBuilderTest {
                 .protectedParams().param("alg", "HS256").set()
                 .add()
             .allowAlgorithm(new HS256Algorithm(key))
-            .useJsonConverter(new JacksonJsonConverter())
+            .useJsonConverter(new JacksonJson())
             .serializedAs(JwsSerialization.COMPACT)
             .create();
 
@@ -50,7 +47,7 @@ public class JwsBuilderTest {
                 .protectedParams().param("alg", "HS256").set()
                 .add()
             .allowAlgorithm(new HS256Algorithm(key))
-            .useJsonConverter(new JacksonJsonConverter())
+            .useJsonConverter(new JacksonJson())
             .serializedAs(JwsSerialization.COMPACT)
             .create();
 
@@ -77,7 +74,7 @@ public class JwsBuilderTest {
                     .set()
                 .add()
             .allowAlgorithm(new HS256Algorithm(key))
-            .useJsonConverter(new JacksonJsonConverter())
+            .useJsonConverter(new JacksonJson())
             .serializedAs(JwsSerialization.COMPACT)
             .create();
 
@@ -101,7 +98,7 @@ public class JwsBuilderTest {
                 .protectedParams().param("alg", "HS256").set()
                 .add()
             .allowAlgorithm(new HS256Algorithm(key))
-            .useJsonConverter(new JacksonJsonConverter())
+            .useJsonConverter(new JacksonJson())
             .serializedAs(JwsSerialization.JSON_FLAT)
             .create();
 
@@ -112,19 +109,5 @@ public class JwsBuilderTest {
             "{\"payload\":\"AQID\",\"protected\":\"eyJhbGciOiJIUzI1NiJ9\",\"signature\":\"" + Base64Url.encode(signature, false) + "\"}",
             jws.asString());
         System.out.println("!!! " + jws.asString());
-    }
-
-    private static class JacksonJsonConverter implements JsonConverter {
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        @Override
-        public String convert(Object obj) {
-            try {
-                return mapper.writeValueAsString(obj);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 }
