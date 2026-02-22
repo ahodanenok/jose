@@ -1,13 +1,17 @@
 package ahodanenok.jose.jws;
 
 import java.security.Key;
+import java.util.Arrays;
 import java.util.Objects;
 
 import javax.crypto.Mac;
 
+/**
+ * HMAC using SHA-256
+ */
 public final class HS256Algorithm extends JwsAlgoritmBase {
 
-    public static final String NAME = "HS256";
+    static final String NAME = "HS256";
 
     private final Key secretKey;
     private final String provider;
@@ -36,5 +40,10 @@ public final class HS256Algorithm extends JwsAlgoritmBase {
         }
         mac.init(secretKey);
         return mac.doFinal(input);
+    }
+
+    @Override
+    public boolean verify(byte[] input, byte[] signature) {
+        return Arrays.equals(sign(input), signature);
     }
 }

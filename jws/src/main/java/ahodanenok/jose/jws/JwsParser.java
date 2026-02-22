@@ -116,10 +116,8 @@ public final class JwsParser {
             return false;
         }
 
-        byte[] signatureComputed = algorithmUsed.sign(
-            (protectedHeaderEncoded + "." + payloadEncoded)
-                .getBytes(StandardCharsets.US_ASCII));
-
-        return Arrays.equals(signature, signatureComputed);
+        return algorithmUsed.verify(
+            (protectedHeaderEncoded + "." + payloadEncoded).getBytes(StandardCharsets.US_ASCII),
+            signature);
     }
 }

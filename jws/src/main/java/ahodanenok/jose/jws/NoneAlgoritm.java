@@ -1,9 +1,12 @@
 package ahodanenok.jose.jws;
 
+/**
+ * No digital signature or MAC performed
+ */
 public final class NoneAlgoritm implements JwsAlgoritm {
 
     public static final NoneAlgoritm INSTANCE = new NoneAlgoritm();
-    public static final String NAME = "none";
+    static final String NAME = "none";
 
     private static final byte[] SIGNATURE = new byte[0];
 
@@ -15,5 +18,10 @@ public final class NoneAlgoritm implements JwsAlgoritm {
     @Override
     public byte[] sign(byte[] input) {
         return SIGNATURE;
+    }
+
+    @Override
+    public boolean verify(byte[] input, byte[] signature) {
+        return signature.length == 0;
     }
 }
