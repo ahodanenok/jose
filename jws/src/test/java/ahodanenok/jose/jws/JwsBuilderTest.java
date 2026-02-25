@@ -108,6 +108,51 @@ public class JwsBuilderTest {
         assertEquals(
             "{\"payload\":\"AQID\",\"protected\":\"eyJhbGciOiJIUzI1NiJ9\",\"signature\":\"" + Base64Url.encode(signature, false) + "\"}",
             jws.asString());
-        System.out.println("!!! " + jws.asString());
+    }
+
+    @Test
+    public void testJsonSerializationOneSignature() throws Exception {
+        Key key = KeyGenerator.getInstance("HmacSHA256").generateKey();
+        Jws jws = Jws.builder()
+            .withPayload(new byte[] { 1, 2, 3 })
+            .withHeader()
+                .protectedParams().param("alg", "HS256").set()
+                .add()
+            .allowAlgorithm(new HS256Algorithm(key))
+            .useJsonConverter(new JacksonJson())
+            .serializedAs(JwsSerialization.JSON)
+            .create();
+
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(key);
+        byte[] signature = mac.doFinal("eyJhbGciOiJIUzI1NiJ9.AQID".getBytes(StandardCharsets.US_ASCII));
+        assertEquals(
+            "{\"payload\":\"AQID\",\"signatures\":[{\"protected\":\"eyJhbGciOiJIUzI1NiJ9\",\"signature\":\"" + Base64Url.encode(signature, false) + "\"}]}",
+            jws.asString());
+    }
+
+    @Test
+    public void testJsonSerializationMultipleSignatures() throws Exception {
+        Key key = KeyGenerator.getInstance("HmacSHA256").generateKey();
+        Jws jws = Jws.builder()
+            .withPayload(new byte[] { 1, 2, 3 })
+            .withHeader()
+                .protectedParams().param("alg", "HS256").set()
+                .add()
+            .withHeader()
+                .protectedParams().param("alg", "none").set()
+                .add()
+            .allowAlgorithm(new HS256Algorithm(key))
+            .allowAlgorithm(NoneAlgorithm.INSTANCE)
+            .useJsonConverter(new JacksonJson())
+            .serializedAs(JwsSerialization.JSON)
+            .create();
+
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(key);
+        byte[] signature = mac.doFinal("eyJhbGciOiJIUzI1NiJ9.AQID".getBytes(StandardCharsets.US_ASCII));
+        assertEquals(
+            "{\"payload\":\"AQID\",\"signatures\":[{\"protected\":\"eyJhbGciOiJIUzI1NiJ9\",\"signature\":\"" + Base64Url.encode(signature, false) + "\"},{\"protected\":\"eyJhbGciOiJub25lIn0\",\"signature\":\"\"}]}",
+            jws.asString());
     }
 }

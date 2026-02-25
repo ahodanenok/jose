@@ -3,9 +3,9 @@ package ahodanenok.jose.jws;
 /**
  * No digital signature or MAC performed
  */
-public final class NoneAlgoritm implements JwsAlgoritm {
+public final class NoneAlgorithm implements JwsAlgorithm {
 
-    public static final NoneAlgoritm INSTANCE = new NoneAlgoritm();
+    public static final NoneAlgorithm INSTANCE = new NoneAlgorithm();
     static final String NAME = "none";
 
     private static final byte[] SIGNATURE = new byte[0];

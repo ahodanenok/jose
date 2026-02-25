@@ -15,12 +15,12 @@ public final class JwsParser {
     }
 
     private final JwsSerialization serialization;
-    private final List<JwsAlgoritm> algorithms;
+    private final List<JwsAlgorithm> algorithms;
     private final JsonParser jsonParser;
 
     JwsParser(
             JwsSerialization serialization,
-            List<JwsAlgoritm> algorithms,
+            List<JwsAlgorithm> algorithms,
             JsonParser jsonParser) {
         this.serialization = serialization;
         this.algorithms = algorithms;
@@ -106,8 +106,8 @@ public final class JwsParser {
         String algorithmName = protectedHeader.get("alg");
         // todo: check present
 
-        JwsAlgoritm algorithmUsed = null;
-        for (JwsAlgoritm algorithm : algorithms) {
+        JwsAlgorithm algorithmUsed = null;
+        for (JwsAlgorithm algorithm : algorithms) {
             if (algorithm.getName().equals(algorithmName)) {
                 algorithmUsed = algorithm;
             }

@@ -2,7 +2,7 @@ package ahodanenok.jose.jws;
 
 import ahodanenok.jose.common.JoseException;
 
-public abstract class JwsAlgoritmBase implements JwsAlgoritm {
+public abstract class JwsAlgorithmBase implements JwsAlgorithm {
 
     @Override
     public final byte[] sign(byte[] input) {

@@ -9,7 +9,7 @@ import javax.crypto.Mac;
 /**
  * HMAC using SHA-256
  */
-public final class HS256Algorithm extends JwsAlgoritmBase {
+public final class HS256Algorithm extends JwsAlgorithmBase {
 
     static final String NAME = "HS256";
 

@@ -9,7 +9,7 @@ import ahodanenok.jose.common.JsonParser;
 public final class JwsParserBuilder {
 
     private JwsSerialization serialization;
-    private final List<JwsAlgoritm> algorithms;
+    private final List<JwsAlgorithm> algorithms;
     private JsonParser jsonParser;
 
     JwsParserBuilder() {
@@ -23,7 +23,7 @@ public final class JwsParserBuilder {
         return this;
     }
 
-    public JwsParserBuilder allowAlgorithm(JwsAlgoritm algorithm) {
+    public JwsParserBuilder allowAlgorithm(JwsAlgorithm algorithm) {
         algorithms.add(Objects.requireNonNull(algorithm));
         return this;
     }

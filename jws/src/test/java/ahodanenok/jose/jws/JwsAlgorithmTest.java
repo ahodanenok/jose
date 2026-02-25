@@ -19,7 +19,7 @@ public class JwsAlgorithmTest {
 
     @Test
     public void testNone() {
-        NoneAlgoritm alg = new NoneAlgoritm();
+        NoneAlgorithm alg = new NoneAlgorithm();
 
         assertArrayEquals(new byte[0], alg.sign(new byte[0]));
         assertTrue(alg.verify(new byte[0], new byte[0]));

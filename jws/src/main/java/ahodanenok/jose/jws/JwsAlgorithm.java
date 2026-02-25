@@ -1,11 +1,11 @@
 package ahodanenok.jose.jws;
 
-public interface JwsAlgoritm {
+public interface JwsAlgorithm {
 
     /**
      * No digital signature or MAC performed
      */
-    public static final String NONE = NoneAlgoritm.NAME;
+    public static final String NONE = NoneAlgorithm.NAME;
 
     /**
      * HMAC using SHA-256

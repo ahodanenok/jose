@@ -13,7 +13,7 @@ import java.util.Objects;
 /**
  * ECDSA using P-256 and SHA-256
  */
-public final class ES256Algorithm implements JwsAlgoritm {
+public final class ES256Algorithm implements JwsAlgorithm {
 
     static final String NAME = "ES256";
 
