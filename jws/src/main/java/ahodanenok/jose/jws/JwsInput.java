@@ -1,32 +1,22 @@
 package ahodanenok.jose.jws;
 
-public final class JwsInput {
+import java.util.List;
 
-    private final Jws jws;
-    private final boolean valid;
+public interface JwsInput {
 
-    JwsInput(Jws jws, boolean valid) {
-        this.jws = jws;;
-        this.valid = valid;
-    }
+    byte[] getPayload();
 
-    public byte[] getPayload() {
-        return jws.getPayload();
-    }
+    JwsHeader getProtectedHeader();
 
-    public JwsHeader getProtectedHeader() {
-        return jws.getProtectedHeader();
-    }
+    JwsHeader getProtectedHeader(int idx);
 
-    public byte[] getSignature() {
-        return jws.getSignature();
-    }
+    byte[] getSignature();
 
-    public boolean isValid() {
-        return valid;
-    }
+    byte[] getSignature(int idx);
 
-    public Jws accept() {
-        return jws;
-    }
+    boolean isValid();
+
+    List<Integer> getInvalidSignatures();
+
+    Jws accept();
 }

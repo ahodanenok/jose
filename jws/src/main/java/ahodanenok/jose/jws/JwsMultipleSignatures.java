@@ -44,6 +44,11 @@ class JwsMultipleSignatures implements Jws {
     }
 
     @Override
+    public byte[] getSignature(int idx) {
+        return signatures.get(idx);
+    }
+
+    @Override
     public int getSignatureCount() {
         return signatures.size();
     }

@@ -2,6 +2,7 @@ package ahodanenok.jose.jws;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public final class JwsParser {
         boolean valid = verifySignature(
             payloadEncoded, protectedHeaderEncoded, protectedHeader, signature);
 
-        return new JwsInput(jws, valid);
+        return new JwsInputOneSignature(jws, valid);
     }
 
     private JwsInput parseJsonFlat(String str) {
@@ -66,6 +67,7 @@ public final class JwsParser {
             throw new JwsException("Failed to parse JWS", e);
         }
 
+        // todo: validate properties' values are strings
         String protectedHeaderEncoded = (String) obj.get("protected");
         JwsHeader protectedHeader = parseProtectedHeader(protectedHeaderEncoded);
         String payloadEncoded = (String) obj.get("payload");
@@ -76,11 +78,66 @@ public final class JwsParser {
         boolean valid = verifySignature(
             payloadEncoded, protectedHeaderEncoded, protectedHeader, signature);
 
-        return new JwsInput(jws, valid);
+        return new JwsInputOneSignature(jws, valid);
     }
 
     private JwsInput parseJson(String str) {
-        return null;
+        Map<String, Object> obj;
+        try {
+            obj = jsonParser.parse(str);
+        } catch (Exception e) {
+            throw new JwsException("Failed to parse JWS", e);
+        }
+
+        String payloadEncoded = (String) obj.get("payload");
+
+        // todo: validate properties' values
+        List<Map<String, Object>> signaturesArray = (List<Map<String, Object>>) obj.get("signatures");
+        // todo: check not empty
+        if (signaturesArray.size() == 1) {
+            Map<String, Object> signatureObj = (Map<String, Object>) signaturesArray.get(0);
+
+            String protectedHeaderEncoded = (String) signatureObj.get("protected");
+            JwsHeader protectedHeader = parseProtectedHeader(protectedHeaderEncoded);
+            byte[] signature = Base64Url.decode((String) signatureObj.get("signature"));
+
+            Jws jws = new JwsOneSignature(
+                Base64Url.decode(payloadEncoded, false), protectedHeader, signature, str);
+            boolean valid = verifySignature(
+                payloadEncoded, protectedHeaderEncoded, protectedHeader, signature);
+
+            return new JwsInputOneSignature(jws, valid);
+        } else {
+            List<JwsHeader> protectedHeaders = new ArrayList<>(signaturesArray.size());
+            List<byte[]> signatures = new ArrayList<>(signaturesArray.size());
+            List<Integer> invalidSignatures = null;
+            for (int i = 0; i < signaturesArray.size(); i++) {
+                Map<String, Object> signatureObj = (Map<String, Object>) signaturesArray.get(i);
+
+                String protectedHeaderEncoded = (String) signatureObj.get("protected");
+                JwsHeader protectedHeader = parseProtectedHeader(protectedHeaderEncoded);
+                byte[] signature = Base64Url.decode((String) signatureObj.get("signature"));
+
+                if (!verifySignature(payloadEncoded, protectedHeaderEncoded, protectedHeader, signature)) {
+                    if (invalidSignatures == null) {
+                        invalidSignatures = new ArrayList<>();
+                    }
+
+                    invalidSignatures.add(i);
+                }
+
+                protectedHeaders.add(protectedHeader);
+                signatures.add(signature);
+            }
+
+            Jws jws = new JwsMultipleSignatures(
+                Base64Url.decode(payloadEncoded, false), protectedHeaders, signatures, str);
+            if (invalidSignatures == null) {
+                invalidSignatures = List.of();
+            }
+
+            return new JwsInputMultipleSignatures(jws, invalidSignatures);
+        }
     }
 
     private JwsHeader parseProtectedHeader(String protectedHeaderEncoded) {

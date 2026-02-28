@@ -47,6 +47,15 @@ class JwsOneSignature implements Jws {
     }
 
     @Override
+    public byte[] getSignature(int idx) {
+        if (idx == 0) {
+            return signature;
+        } else {
+            throw new IllegalArgumentException(); // todo: error message
+        }
+    }
+
+    @Override
     public int getSignatureCount() {
         // todo: no signatures?
         return 1;

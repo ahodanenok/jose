@@ -42,7 +42,8 @@ public interface Jws {
     List<JwsHeader> getProtectedHeaders();
 
     byte[] getSignature();
-    // todo: Object setSignature(int idx);
+
+    byte[] getSignature(int idx);
 
     // todo: not sure if this method is needed
     // List<Object> setSignatures();
@@ -51,7 +52,7 @@ public interface Jws {
 
     /**
      * Get a serialized representation of this JWS
-     * 
+     *
      * @see JwsSerialization
      */
     String asString();
