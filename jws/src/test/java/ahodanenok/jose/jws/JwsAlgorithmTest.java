@@ -5,6 +5,7 @@ import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.Signature;
+import java.util.function.Function;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
@@ -36,18 +37,17 @@ public class JwsAlgorithmTest {
 
     @Test
     public void testHS256() throws Exception {
-        Key key = KeyGenerator.getInstance("HmacSHA256").generateKey();
-        Mac mac = Mac.getInstance("HmacSHA256");
-        mac.init(key);
-        HS256Algorithm alg = new HS256Algorithm(key);
+        testHMAC("HmacSHA256", HS256Algorithm::new);
+    }
 
-        assertArrayEquals(mac.doFinal(new byte[0]), alg.sign(new byte[0]));
-        assertTrue(alg.verify(new byte[0], mac.doFinal(new byte[0])));
-        assertFalse(alg.verify(new byte[] { 1 }, mac.doFinal(new byte[0])));
+    @Test
+    public void testHS384() throws Exception {
+        testHMAC("HmacSHA384", HS384Algorithm::new);
+    }
 
-        assertArrayEquals(mac.doFinal(new byte[] { 1, 2, 3}), alg.sign(new byte[] { 1, 2, 3 }));
-        assertTrue(alg.verify(new byte[] { 1, 2, 3 }, mac.doFinal(new byte[] { 1, 2, 3 })));
-        assertFalse(alg.verify(new byte[] { 1, 2, 3, 4 }, mac.doFinal(new byte[] { 1, 2, 3 })));
+    @Test
+    public void testHS512() throws Exception {
+        testHMAC("HmacSHA512", HS512Algorithm::new);
     }
 
     @Test
@@ -128,5 +128,20 @@ public class JwsAlgorithmTest {
         sig.initVerify(keys.getPublic());
         sig.update(new byte[] { 1, 2, 3, 4 });
         assertFalse(sig.verify(signature));
+    }
+
+    public void testHMAC(String jcaAlgorithmName, Function<Key, JwsAlgorithm> algSupplier) throws Exception {
+        Key key = KeyGenerator.getInstance(jcaAlgorithmName).generateKey();
+        Mac mac = Mac.getInstance(jcaAlgorithmName);
+        mac.init(key);
+        JwsAlgorithm alg = algSupplier.apply(key);
+
+        assertArrayEquals(mac.doFinal(new byte[0]), alg.sign(new byte[0]));
+        assertTrue(alg.verify(new byte[0], mac.doFinal(new byte[0])));
+        assertFalse(alg.verify(new byte[] { 1 }, mac.doFinal(new byte[0])));
+
+        assertArrayEquals(mac.doFinal(new byte[] { 1, 2, 3}), alg.sign(new byte[] { 1, 2, 3 }));
+        assertTrue(alg.verify(new byte[] { 1, 2, 3 }, mac.doFinal(new byte[] { 1, 2, 3 })));
+        assertFalse(alg.verify(new byte[] { 1, 2, 3, 4 }, mac.doFinal(new byte[] { 1, 2, 3 })));
     }
 }

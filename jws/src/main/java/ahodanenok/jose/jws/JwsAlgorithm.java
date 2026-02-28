@@ -13,6 +13,16 @@ public interface JwsAlgorithm {
     public static final String HS256 = HS256Algorithm.NAME;
 
     /**
+     * HMAC using SHA-384
+     */
+    public static final String HS384 = HS384Algorithm.NAME;
+
+    /**
+     * HMAC using SHA-512
+     */
+    public static final String HS512 = HS512Algorithm.NAME;
+
+    /**
      * ECDSA using P-256 and SHA-256
      */
     public static final String ES256 = ES256Algorithm.NAME;
