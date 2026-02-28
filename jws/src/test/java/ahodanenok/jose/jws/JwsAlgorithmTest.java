@@ -52,82 +52,42 @@ public class JwsAlgorithmTest {
 
     @Test
     public void testES256() throws Exception {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC");
-        KeyPair keys = keyGen.generateKeyPair();
-        Signature sig = Signature.getInstance("SHA256withECDSAinP1363Format");
-        ES256Algorithm alg = new ES256Algorithm();
-        alg.signByPrivateKey(keys.getPrivate());
-        alg.verifyByPublicKey(keys.getPublic());
-
-        byte[] signature;
-
-        sig.initSign(keys.getPrivate());
-        sig.update(new byte[0]);
-        signature = sig.sign();
-        assertTrue(alg.verify(new byte[0], signature));
-        assertFalse(alg.verify(new byte[] { 1 }, signature));
-
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[0]);
-        signature = alg.sign(new byte[0]);
-        assertTrue(sig.verify(signature));
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[] { 1 });
-        assertFalse(sig.verify(signature));
-
-        sig.initSign(keys.getPrivate());
-        sig.update(new byte[] { 1, 2, 3 });
-        signature = sig.sign();
-        assertTrue(alg.verify(new byte[] { 1, 2, 3 }, signature));
-        assertFalse(alg.verify(new byte[] { 1, 2, 3, 4 }, signature));
-
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[] { 1, 2, 3 });
-        signature = alg.sign(new byte[] { 1, 2, 3 });
-        assertTrue(sig.verify(signature));
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[] { 1, 2, 3, 4 });
-        assertFalse(sig.verify(signature));
+        testSignature("SHA256withECDSAinP1363Format", "EC", keys -> {
+            ES256Algorithm alg = new ES256Algorithm();
+            alg.signByPrivateKey(keys.getPrivate());
+            alg.verifyByPublicKey(keys.getPublic());
+            return alg;
+        });
     }
 
     @Test
     public void testRS256() throws Exception {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSASSA-PSS");
-        KeyPair keys = keyGen.generateKeyPair();
-        Signature sig = Signature.getInstance("SHA256withRSA");
-        RS256Algorithm alg = new RS256Algorithm();
-        alg.signByPrivateKey(keys.getPrivate());
-        alg.verifyByPublicKey(keys.getPublic());
+        testSignature("SHA256withRSA", "RSASSA-PSS", keys -> {
+            RS256Algorithm alg = new RS256Algorithm();
+            alg.signByPrivateKey(keys.getPrivate());
+            alg.verifyByPublicKey(keys.getPublic());
+            return alg;
+        });
+    }
 
-        byte[] signature;
+    @Test
+    public void testRS384() throws Exception {
+        testSignature("SHA384withRSA", "RSASSA-PSS", keys -> {
+            RS384Algorithm alg = new RS384Algorithm();
+            alg.signByPrivateKey(keys.getPrivate());
+            alg.verifyByPublicKey(keys.getPublic());
+            return alg;
+        });
+    }
 
-        sig.initSign(keys.getPrivate());
-        sig.update(new byte[0]);
-        signature = sig.sign();
-        assertTrue(alg.verify(new byte[0], signature));
-        assertFalse(alg.verify(new byte[] { 1 }, signature));
-
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[0]);
-        signature = alg.sign(new byte[0]);
-        assertTrue(sig.verify(signature));
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[] { 1 });
-        assertFalse(sig.verify(signature));
-
-        sig.initSign(keys.getPrivate());
-        sig.update(new byte[] { 1, 2, 3 });
-        signature = sig.sign();
-        assertTrue(alg.verify(new byte[] { 1, 2, 3 }, signature));
-        assertFalse(alg.verify(new byte[] { 1, 2, 3, 4 }, signature));
-
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[] { 1, 2, 3 });
-        signature = alg.sign(new byte[] { 1, 2, 3 });
-        assertTrue(sig.verify(signature));
-        sig.initVerify(keys.getPublic());
-        sig.update(new byte[] { 1, 2, 3, 4 });
-        assertFalse(sig.verify(signature));
+    @Test
+    public void testRS512() throws Exception {
+        testSignature("SHA512withRSA", "RSASSA-PSS", keys -> {
+            RS512Algorithm alg = new RS512Algorithm();
+            alg.signByPrivateKey(keys.getPrivate());
+            alg.verifyByPublicKey(keys.getPublic());
+            return alg;
+        });
     }
 
     public void testHMAC(String jcaAlgorithmName, Function<Key, JwsAlgorithm> algSupplier) throws Exception {
@@ -143,5 +103,44 @@ public class JwsAlgorithmTest {
         assertArrayEquals(mac.doFinal(new byte[] { 1, 2, 3}), alg.sign(new byte[] { 1, 2, 3 }));
         assertTrue(alg.verify(new byte[] { 1, 2, 3 }, mac.doFinal(new byte[] { 1, 2, 3 })));
         assertFalse(alg.verify(new byte[] { 1, 2, 3, 4 }, mac.doFinal(new byte[] { 1, 2, 3 })));
+    }
+
+    public void testSignature(
+            String jcaSignatureAlgorithmName, String jcaKeyAlgorithmName,
+            Function<KeyPair, JwsAlgorithm> algSupplier) throws Exception {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(jcaKeyAlgorithmName);
+        KeyPair keys = keyGen.generateKeyPair();
+        Signature sig = Signature.getInstance(jcaSignatureAlgorithmName);
+        JwsAlgorithm alg = algSupplier.apply(keys);
+
+        byte[] signature;
+
+        sig.initSign(keys.getPrivate());
+        sig.update(new byte[0]);
+        signature = sig.sign();
+        assertTrue(alg.verify(new byte[0], signature));
+        assertFalse(alg.verify(new byte[] { 1 }, signature));
+
+        sig.initVerify(keys.getPublic());
+        sig.update(new byte[0]);
+        signature = alg.sign(new byte[0]);
+        assertTrue(sig.verify(signature));
+        sig.initVerify(keys.getPublic());
+        sig.update(new byte[] { 1 });
+        assertFalse(sig.verify(signature));
+
+        sig.initSign(keys.getPrivate());
+        sig.update(new byte[] { 1, 2, 3 });
+        signature = sig.sign();
+        assertTrue(alg.verify(new byte[] { 1, 2, 3 }, signature));
+        assertFalse(alg.verify(new byte[] { 1, 2, 3, 4 }, signature));
+
+        sig.initVerify(keys.getPublic());
+        sig.update(new byte[] { 1, 2, 3 });
+        signature = alg.sign(new byte[] { 1, 2, 3 });
+        assertTrue(sig.verify(signature));
+        sig.initVerify(keys.getPublic());
+        sig.update(new byte[] { 1, 2, 3, 4 });
+        assertFalse(sig.verify(signature));
     }
 }

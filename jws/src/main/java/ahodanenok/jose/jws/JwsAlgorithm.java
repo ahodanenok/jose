@@ -33,6 +33,16 @@ public interface JwsAlgorithm {
     public static final String RS256 = RS256Algorithm.NAME;
 
     /**
+     * RSASSA-PKCS1-v1_5 using SHA-384
+     */
+    public static final String RS384 = RS384Algorithm.NAME;
+
+    /**
+     * RSASSA-PKCS1-v1_5 using SHA-512
+     */
+    public static final String RS512 = RS512Algorithm.NAME;
+
+    /**
      * Get algorithm name.
      *
      * For the list of standard algorithms see https://datatracker.ietf.org/doc/html/rfc7518#section-3.1
