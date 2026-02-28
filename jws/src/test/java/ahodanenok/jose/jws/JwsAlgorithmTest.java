@@ -61,6 +61,26 @@ public class JwsAlgorithmTest {
     }
 
     @Test
+    public void testES384() throws Exception {
+        testSignature("SHA384withECDSAinP1363Format", "EC", keys -> {
+            ES384Algorithm alg = new ES384Algorithm();
+            alg.signByPrivateKey(keys.getPrivate());
+            alg.verifyByPublicKey(keys.getPublic());
+            return alg;
+        });
+    }
+
+    @Test
+    public void testES512() throws Exception {
+        testSignature("SHA512withECDSAinP1363Format", "EC", keys -> {
+            ES512Algorithm alg = new ES512Algorithm();
+            alg.signByPrivateKey(keys.getPrivate());
+            alg.verifyByPublicKey(keys.getPublic());
+            return alg;
+        });
+    }
+
+    @Test
     public void testRS256() throws Exception {
         testSignature("SHA256withRSA", "RSASSA-PSS", keys -> {
             RS256Algorithm alg = new RS256Algorithm();
