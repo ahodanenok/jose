@@ -10,6 +10,7 @@ import ahodanenok.jose.common.Base64Url;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JwsParserTest {
@@ -85,6 +86,7 @@ public class JwsParserTest {
         Jws jws = input.accept();
         assertEquals("JWT", jws.getProtectedHeader().get("typ"));
         assertEquals("HS256", jws.getProtectedHeader().get("alg"));
+        assertNull(jws.getUnprotectedHeader());
         assertArrayEquals(
             TestUtils.bytes(123, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
             jws.getPayload());
@@ -117,6 +119,78 @@ public class JwsParserTest {
         Jws jws = input.accept();
         assertEquals("JWT", jws.getProtectedHeader().get("typ"));
         assertEquals("HS256", jws.getProtectedHeader().get("alg"));
+        assertNull(jws.getUnprotectedHeader());
+        assertArrayEquals(
+            TestUtils.bytes(19, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
+            jws.getPayload());
+        assertArrayEquals(
+            TestUtils.bytes(116, 24, 223, 180, 151, 153, 224, 37, 79, 250, 96, 125, 216, 173, 187, 186, 22, 212, 37, 77, 105, 214, 191, 240, 91, 88, 5, 88, 83, 132, 141, 121),
+            jws.getSignature());
+        assertEquals(str, jws.asString());
+    }
+
+    @Test
+    public void testParseJsonFlattenedWithUnprotectedHeaderValid() {
+        JwsParser parser = JwsParser.builder()
+            .forSerialization(JwsSerialization.JSON_FLAT)
+            .allowAlgorithm(new HS256Algorithm(new SecretKeySpec(Base64Url.decode("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"), "HmacSHA256")))
+            .withJsonParser(new JacksonJson())
+            .create();
+
+        // https://datatracker.ietf.org/doc/html/rfc7515#appendix-A.1.1
+        String str =
+        """
+        {
+            "payload": "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",
+            "protected": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9",
+            "header": {
+                "foo": "100"
+            },
+            "signature": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+        }
+        """;
+        JwsInput input = parser.parse(str);
+        assertTrue(input.isValid());
+        Jws jws = input.accept();
+        assertEquals("JWT", jws.getProtectedHeader().get("typ"));
+        assertEquals("HS256", jws.getProtectedHeader().get("alg"));
+        assertEquals("100", jws.getUnprotectedHeader().get("foo"));
+        assertArrayEquals(
+            TestUtils.bytes(123, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
+            jws.getPayload());
+        assertArrayEquals(
+            TestUtils.bytes(116, 24, 223, 180, 151, 153, 224, 37, 79, 250, 96, 125, 216, 173, 187, 186, 22, 212, 37, 77, 105, 214, 191, 240, 91, 88, 5, 88, 83, 132, 141, 121),
+            jws.getSignature());
+        assertEquals(str, jws.asString());
+    }
+
+    @Test
+    public void testParseJsonFlattenedWithUnprotectedHeaderNotValid() {
+        JwsParser parser = JwsParser.builder()
+            .forSerialization(JwsSerialization.JSON_FLAT)
+            .allowAlgorithm(new HS256Algorithm(new SecretKeySpec(Base64Url.decode("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"), "HmacSHA256")))
+            .withJsonParser(new JacksonJson())
+            .create();
+
+        // https://datatracker.ietf.org/doc/html/rfc7515#appendix-A.1.1
+        // payload modified - starts with uppercase 'E' instead of 'e'
+        String str =
+        """
+        {
+            "payload": "EyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",
+            "protected": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9",
+            "header": {
+                "foo": "100"
+            },
+            "signature": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+        }
+        """;
+        JwsInput input = parser.parse(str);
+        assertFalse(input.isValid());
+        Jws jws = input.accept();
+        assertEquals("JWT", jws.getProtectedHeader().get("typ"));
+        assertEquals("HS256", jws.getProtectedHeader().get("alg"));
+        assertEquals("100", jws.getUnprotectedHeader().get("foo"));
         assertArrayEquals(
             TestUtils.bytes(19, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
             jws.getPayload());
@@ -151,6 +225,7 @@ public class JwsParserTest {
         Jws jws = input.accept();
         assertEquals("JWT", jws.getProtectedHeader().get("typ"));
         assertEquals("HS256", jws.getProtectedHeader().get("alg"));
+        assertNull(jws.getUnprotectedHeader());
         assertArrayEquals(
             TestUtils.bytes(123, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
             jws.getPayload());
@@ -186,6 +261,7 @@ public class JwsParserTest {
         Jws jws = input.accept();
         assertEquals("JWT", jws.getProtectedHeader().get("typ"));
         assertEquals("HS256", jws.getProtectedHeader().get("alg"));
+        assertNull(jws.getUnprotectedHeader());
         assertArrayEquals(
             TestUtils.bytes(19, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
             jws.getPayload());
@@ -227,6 +303,8 @@ public class JwsParserTest {
         assertEquals("none", jws.getProtectedHeader(0).get("alg"));
         assertEquals("JWT", jws.getProtectedHeader(1).get("typ"));
         assertEquals("HS256", jws.getProtectedHeader(1).get("alg"));
+        assertNull(jws.getUnprotectedHeader(0));
+        assertNull(jws.getUnprotectedHeader(1));
         assertEquals(2, jws.getSignatureCount());
         assertArrayEquals(
             TestUtils.bytes(123, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
@@ -270,6 +348,110 @@ public class JwsParserTest {
         assertEquals("none", jws.getProtectedHeader(0).get("alg"));
         assertEquals("JWT", jws.getProtectedHeader(1).get("typ"));
         assertEquals("HS256", jws.getProtectedHeader(1).get("alg"));
+        assertNull(jws.getUnprotectedHeader(0));
+        assertNull(jws.getUnprotectedHeader(1));
+        assertEquals(2, jws.getSignatureCount());
+        assertArrayEquals(
+            TestUtils.bytes(19, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
+            jws.getPayload());
+        assertArrayEquals(new byte[0], jws.getSignature(0));
+        assertArrayEquals(
+            TestUtils.bytes(116, 24, 223, 180, 151, 153, 224, 37, 79, 250, 96, 125, 216, 173, 187, 186, 22, 212, 37, 77, 105, 214, 191, 240, 91, 88, 5, 88, 83, 132, 141, 121),
+            jws.getSignature(1));
+        assertEquals(str, jws.asString());
+    }
+
+    @Test
+    public void testJsonMultipleSignaturesWithUnprotectedHeaderValid() {
+        JwsParser parser = JwsParser.builder()
+            .forSerialization(JwsSerialization.JSON)
+            .allowAlgorithm(new HS256Algorithm(new SecretKeySpec(Base64Url.decode("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"), "HmacSHA256")))
+            .allowAlgorithm(NoneAlgorithm.INSTANCE)
+            .withJsonParser(new JacksonJson())
+            .create();
+
+        String str =
+        """
+        {
+            "payload": "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",
+            "signatures": [
+                {
+                    "protected": "eyJhbGciOiJub25lIn0",
+                    "signature": "",
+                    "header": {
+                        "foo": "1"
+                    }
+                },
+                {
+                    "protected": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9",
+                    "signature": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+                    "header": {
+                        "bar": "2"
+                    }
+                }
+            ]
+        }
+        """;
+        JwsInput input = parser.parse(str);
+        assertTrue(input.isValid());
+        assertEquals(List.of(), input.getInvalidSignatures());
+        Jws jws = input.accept();
+        assertEquals("none", jws.getProtectedHeader(0).get("alg"));
+        assertEquals("JWT", jws.getProtectedHeader(1).get("typ"));
+        assertEquals("HS256", jws.getProtectedHeader(1).get("alg"));
+        assertEquals("1", jws.getUnprotectedHeader(0).get("foo"));
+        assertEquals("2", jws.getUnprotectedHeader(1).get("bar"));
+        assertEquals(2, jws.getSignatureCount());
+        assertArrayEquals(
+            TestUtils.bytes(123, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),
+            jws.getPayload());
+        assertArrayEquals(new byte[0], jws.getSignature(0));
+        assertArrayEquals(
+            TestUtils.bytes(116, 24, 223, 180, 151, 153, 224, 37, 79, 250, 96, 125, 216, 173, 187, 186, 22, 212, 37, 77, 105, 214, 191, 240, 91, 88, 5, 88, 83, 132, 141, 121),
+            jws.getSignature(1));
+        assertEquals(str, jws.asString());
+    }
+
+    @Test
+    public void testJsonMultipleSignaturesWithUnprotectedHeaderNotValid() {
+        JwsParser parser = JwsParser.builder()
+            .forSerialization(JwsSerialization.JSON)
+            .allowAlgorithm(new HS256Algorithm(new SecretKeySpec(Base64Url.decode("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"), "HmacSHA256")))
+            .allowAlgorithm(NoneAlgorithm.INSTANCE)
+            .withJsonParser(new JacksonJson())
+            .create();
+
+        String str =
+        """
+        {
+            "payload": "EyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ",
+            "signatures": [
+                {
+                    "protected": "eyJhbGciOiJub25lIn0",
+                    "signature": "",
+                    "header": {
+                        "foo": "1"
+                    }
+                },
+                {
+                    "protected": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9",
+                    "signature": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+                    "header": {
+                        "bar": "2"
+                    }
+                }
+            ]
+        }
+        """;
+        JwsInput input = parser.parse(str);
+        assertFalse(input.isValid());
+        assertEquals(List.of(1), input.getInvalidSignatures());
+        Jws jws = input.accept();
+        assertEquals("none", jws.getProtectedHeader(0).get("alg"));
+        assertEquals("JWT", jws.getProtectedHeader(1).get("typ"));
+        assertEquals("HS256", jws.getProtectedHeader(1).get("alg"));
+        assertEquals("1", jws.getUnprotectedHeader(0).get("foo"));
+        assertEquals("2", jws.getUnprotectedHeader(1).get("bar"));
         assertEquals(2, jws.getSignatureCount());
         assertArrayEquals(
             TestUtils.bytes(19, 34, 105, 115, 115, 34, 58, 34, 106, 111, 101, 34, 44, 13, 10, 32, 34, 101, 120, 112, 34, 58, 49, 51, 48, 48, 56, 49, 57, 51, 56, 48, 44, 13, 10, 32, 34, 104, 116, 116, 112, 58, 47, 47, 101, 120, 97, 109, 112, 108, 101, 46, 99, 111, 109, 47, 105, 115, 95, 114, 111, 111, 116, 34, 58, 116, 114, 117, 101, 125),

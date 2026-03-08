@@ -52,7 +52,7 @@ public final class JwsParser {
         byte[] signature = Base64Url.decode(parts[2], false);
 
         Jws jws = new JwsOneSignature(
-            Base64Url.decode(payloadEncoded, false), protectedHeader, signature, str);
+            Base64Url.decode(payloadEncoded, false), protectedHeader, null, signature, str);
         boolean valid = verifySignature(
             payloadEncoded, protectedHeaderEncoded, protectedHeader, signature);
 
@@ -70,11 +70,13 @@ public final class JwsParser {
         // todo: validate properties' values are strings
         String protectedHeaderEncoded = (String) obj.get("protected");
         JwsHeader protectedHeader = parseProtectedHeader(protectedHeaderEncoded);
+        JwsHeader unprotectedHeader = getUnprotectedHeader(obj);
         String payloadEncoded = (String) obj.get("payload");
         byte[] signature = Base64Url.decode((String) obj.get("signature"));
 
         Jws jws = new JwsOneSignature(
-            Base64Url.decode(payloadEncoded, false), protectedHeader, signature, str);
+            Base64Url.decode(payloadEncoded, false),
+            protectedHeader, unprotectedHeader, signature, str);
         boolean valid = verifySignature(
             payloadEncoded, protectedHeaderEncoded, protectedHeader, signature);
 
@@ -99,16 +101,18 @@ public final class JwsParser {
 
             String protectedHeaderEncoded = (String) signatureObj.get("protected");
             JwsHeader protectedHeader = parseProtectedHeader(protectedHeaderEncoded);
+            JwsHeader unprotectedHeader = getUnprotectedHeader(signatureObj);
             byte[] signature = Base64Url.decode((String) signatureObj.get("signature"));
 
             Jws jws = new JwsOneSignature(
-                Base64Url.decode(payloadEncoded, false), protectedHeader, signature, str);
+                Base64Url.decode(payloadEncoded, false), protectedHeader, unprotectedHeader, signature, str);
             boolean valid = verifySignature(
                 payloadEncoded, protectedHeaderEncoded, protectedHeader, signature);
 
             return new JwsInputOneSignature(jws, valid);
         } else {
             List<JwsHeader> protectedHeaders = new ArrayList<>(signaturesArray.size());
+            List<JwsHeader> unprotectedHeaders = new ArrayList<>(signaturesArray.size());
             List<byte[]> signatures = new ArrayList<>(signaturesArray.size());
             List<Integer> invalidSignatures = null;
             for (int i = 0; i < signaturesArray.size(); i++) {
@@ -116,6 +120,7 @@ public final class JwsParser {
 
                 String protectedHeaderEncoded = (String) signatureObj.get("protected");
                 JwsHeader protectedHeader = parseProtectedHeader(protectedHeaderEncoded);
+                JwsHeader unprotectedHeader = getUnprotectedHeader(signatureObj);
                 byte[] signature = Base64Url.decode((String) signatureObj.get("signature"));
 
                 if (!verifySignature(payloadEncoded, protectedHeaderEncoded, protectedHeader, signature)) {
@@ -127,11 +132,13 @@ public final class JwsParser {
                 }
 
                 protectedHeaders.add(protectedHeader);
+                unprotectedHeaders.add(unprotectedHeader);
                 signatures.add(signature);
             }
 
             Jws jws = new JwsMultipleSignatures(
-                Base64Url.decode(payloadEncoded, false), protectedHeaders, signatures, str);
+                Base64Url.decode(payloadEncoded, false),
+                protectedHeaders, unprotectedHeaders, signatures, str);
             if (invalidSignatures == null) {
                 invalidSignatures = List.of();
             }
@@ -152,6 +159,15 @@ public final class JwsParser {
             throw new JwsException("Failed to parse protected header", e);
         }
 
+        return new JwsHeader(params);
+    }
+
+    private JwsHeader getUnprotectedHeader(Map<String, Object> obj) {
+        if (!obj.containsKey("header")) {
+            return null;
+        }
+
+        Map<String, Object> params = (Map<String, Object>) obj.get("header");
         return new JwsHeader(params);
     }
 

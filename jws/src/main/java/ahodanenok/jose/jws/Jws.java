@@ -22,36 +22,64 @@ public interface Jws {
      * Get the sequence of octets secured by this JWS.
      * If the payload is empty - an empty array will be returned.
      *
-     * @returns payload octets, never null
+     * @return payload octets, never null
      */
     byte[] getPayload();
 
     /**
      * Get the first JWS Protected Header
+     *
+     * @return header or null if there is no protected header at specified index
      */
     JwsHeader getProtectedHeader();
 
     /**
      * Get JWS Protected Header at specified index
      *
-     * @throws IllegalArgumentException if idx < 0 or idx > the number of signatures
+     * @return header or null if there is no protected header at specified index
+     * @throws IndexOutOfBoundsException if idx < 0 or idx >= signature count
      */
     JwsHeader getProtectedHeader(int idx);
 
-    // todo: not sure if this method is needed
-    List<JwsHeader> getProtectedHeaders();
+    /**
+     * Get the first JWS Unprotected Header
+     *
+     * @return header or null if there is no unprotected header at specified index
+     */
+    JwsHeader getUnprotectedHeader();
 
+    /**
+     * Get JWS Unprotected Header at specified index
+     *
+     * @return header or null if there is no unprotected header at specified index
+     * @throws IndexOutOfBoundsException if idx < 0 or idx >= signature count
+     */
+    JwsHeader getUnprotectedHeader(int idx);
+
+    /**
+     * Get the first JWS Signature
+     * If the signature is empty - an empty array will be returned
+     *
+     * @return signature octers, never null
+     */
     byte[] getSignature();
 
+    /**
+     * Get JWS Signature at specified index
+     * If the signature is empty - an empty array will be returned
+     *
+     * @return signature octers, never null
+     * @throws IndexOutOfBoundsException if idx < 0 or idx >= signature count
+     */
     byte[] getSignature(int idx);
 
-    // todo: not sure if this method is needed
-    // List<Object> setSignatures();
-
+    /**
+     * Get the number of JWS Signatures
+     */
     int getSignatureCount();
 
     /**
-     * Get a serialized representation of this JWS
+     * Get the serialized representation of this JWS
      *
      * @see JwsSerialization
      */

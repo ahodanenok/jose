@@ -1,19 +1,25 @@
 package ahodanenok.jose.jws;
 
 import java.util.List;
-import java.util.Objects;
 
 class JwsOneSignature implements Jws {
 
     private final byte[] payload;
     private final JwsHeader protectedHeader;
+    private final JwsHeader unprotectedHeader;
     private final byte[] signature;
     private final String serializedForm;
 
-    JwsOneSignature(byte[] payload, JwsHeader protectedHeader, byte[] signature, String serializedForm) {
-        this.payload = Objects.requireNonNull(payload);
-        this.protectedHeader = protectedHeader; // todo: required?
-        this.signature = signature; // todo: required?
+    JwsOneSignature(
+            byte[] payload,
+            JwsHeader protectedHeader,
+            JwsHeader unprotectedHeader,
+            byte[] signature,
+            String serializedForm) {
+        this.payload = payload;
+        this.protectedHeader = protectedHeader;
+        this.unprotectedHeader = unprotectedHeader;
+        this.signature = signature;
         this.serializedForm = serializedForm;
     }
 
@@ -32,13 +38,22 @@ class JwsOneSignature implements Jws {
         if (idx == 0) {
             return protectedHeader;
         } else {
-            throw new IllegalArgumentException(); // todo: error message
+            throw new IndexOutOfBoundsException("Index " + idx + " is not valid");
         }
     }
 
     @Override
-    public List<JwsHeader> getProtectedHeaders() {
-        return List.of(protectedHeader);
+    public JwsHeader getUnprotectedHeader() {
+        return unprotectedHeader;
+    }
+
+    @Override
+    public JwsHeader getUnprotectedHeader(int idx) {
+        if (idx == 0) {
+            return unprotectedHeader;
+        } else {
+            throw new IndexOutOfBoundsException("Index " + idx + " is not valid");
+        }
     }
 
     @Override
@@ -51,13 +66,12 @@ class JwsOneSignature implements Jws {
         if (idx == 0) {
             return signature;
         } else {
-            throw new IllegalArgumentException(); // todo: error message
+            throw new IndexOutOfBoundsException("Index " + idx + " is not valid");
         }
     }
 
     @Override
     public int getSignatureCount() {
-        // todo: no signatures?
         return 1;
     }
 

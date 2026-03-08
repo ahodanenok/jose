@@ -15,34 +15,52 @@ final class JwsInputOneSignature implements JwsInput {
         this.valid = valid;
     }
 
+    @Override
     public byte[] getPayload() {
         return jws.getPayload();
     }
 
+    @Override
     public JwsHeader getProtectedHeader() {
         return jws.getProtectedHeader();
     }
 
+    @Override
     public JwsHeader getProtectedHeader(int idx) {
         return jws.getProtectedHeader(idx);
     }
 
+    @Override
+    public JwsHeader getUnprotectedHeader() {
+        return jws.getUnprotectedHeader();
+    }
+
+    @Override
+    public JwsHeader getUnprotectedHeader(int idx) {
+        return jws.getUnprotectedHeader(idx);
+    }
+
+    @Override
     public byte[] getSignature() {
         return jws.getSignature();
     }
 
+    @Override
     public byte[] getSignature(int idx) {
         return jws.getSignature(idx);
     }
 
+    @Override
     public boolean isValid() {
         return valid;
     }
 
+    @Override
     public List<Integer> getInvalidSignatures() {
         return valid ? INVALID_EMPTY : INVALID_FIRST;
     }
 
+    @Override
     public Jws accept() {
         return jws;
     }

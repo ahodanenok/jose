@@ -2,6 +2,7 @@ package ahodanenok.jose.jws;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
@@ -14,8 +15,7 @@ public final class JwsBuilder {
     private static final byte[] EMPTY_PAYLOAD = new byte[0];
 
     private byte[] payload;
-    List<JwsHeader> protectedHeaders = new ArrayList<>();
-    // todo: unprotected headers
+    List<JoseParams> joseParams = new ArrayList<>();
     private List<JwsAlgorithm> algorithms;
     private JsonConverter jsonConverter;
     private JwsSerialization serialization;
@@ -55,7 +55,9 @@ public final class JwsBuilder {
     }
 
     public Jws create() {
-        if (protectedHeaders.size() <= 1) {
+        if (joseParams.size() == 0) {
+            throw new IllegalStateException("Header parameter 'alg' must be present");
+        } else if (joseParams.size() == 1) {
             return createOneSignature();
         } else {
            return createMultipleSignatures();
@@ -64,32 +66,38 @@ public final class JwsBuilder {
 
     private Jws createOneSignature() {
         byte[] payloadUsed = payload != null ? payload : EMPTY_PAYLOAD;
-        JwsHeader protectedHeaderUsed = !protectedHeaders.isEmpty()
-            ? protectedHeaders.get(0) : JwsHeader.EMPTY;
-
-        String encodedPayload = Base64Url.encode(payloadUsed, false);
-        String encodedProtectedHeader = Base64Url.encode(
-            protectedHeaderUsed.asJson(jsonConverter).getBytes(StandardCharsets.UTF_8),
+        String payloadEncoded = Base64Url.encode(payloadUsed, false);
+        JwsHeader protectedHeaderUsed = joseParams.get(0).protectedHeader;
+        JwsHeader unprotectedHeaderUsed = joseParams.get(0).unprotectedHeader;
+        String protectedHeaderEncoded = Base64Url.encode(
+            jsonConverter.convert(protectedHeaderUsed.parameters)
+                .getBytes(StandardCharsets.UTF_8),
             false);
         byte[] signature = computeSignature(
-                protectedHeaderUsed.getAlgorithm(),
-                encodedProtectedHeader, encodedPayload);
+                new JwsJoseHeaderUnion(protectedHeaderUsed, unprotectedHeaderUsed),
+                protectedHeaderEncoded, payloadEncoded);
         String serializedForm = null;
         if (serialization != null) { // todo: compact by default?
             serializedForm = switch (serialization) {
                 case COMPACT -> serializeCompact(
-                    encodedPayload, encodedProtectedHeader, signature);
+                    payloadEncoded,
+                    protectedHeaderEncoded,
+                    signature);
                 case JSON -> serializeJson(
-                    encodedPayload, List.of(encodedProtectedHeader), List.of(signature));
+                    payloadEncoded,
+                    List.of(protectedHeaderEncoded),
+                    List.of(signature));
                 case JSON_FLAT -> serializeJsonFlat(
-                    encodedPayload, encodedProtectedHeader, signature);
+                    payloadEncoded,
+                    protectedHeaderEncoded,
+                    signature);
             };
         }
 
-        // todo: how to represent a jws with no signatures?
         return new JwsOneSignature(
             payloadUsed,
             protectedHeaderUsed,
+            unprotectedHeaderUsed,
             signature,
             serializedForm);
     }
@@ -97,17 +105,29 @@ public final class JwsBuilder {
     private Jws createMultipleSignatures() {
         byte[] payloadUsed = payload != null ? payload : EMPTY_PAYLOAD;
         String payloadEncoded = Base64Url.encode(payloadUsed, false);
+        List<JwsHeader> protectedHeadersUsed = new ArrayList<>();
+        List<JwsHeader> unprotectedHeadersUsed = new ArrayList<>();
+        List<String> protectedHeadersEncoded = new ArrayList<>(joseParams.size());
+        List<byte[]> signatures = new ArrayList<>(joseParams.size());
+        for (int i = 0; i < joseParams.size(); i++) {
+            JoseParams params = joseParams.get(i);
 
-        List<String> protectedHeadersEncoded = new ArrayList<>(protectedHeaders.size());
-        List<byte[]> signatures = new ArrayList<>(protectedHeaders.size());
-        for (int i = 0; i < protectedHeaders.size(); i++) {
-            JwsHeader protectedHeader = protectedHeaders.get(i);
-            String protectedHeaderEncoded = Base64Url.encode(
-                protectedHeader.asJson(jsonConverter).getBytes(StandardCharsets.UTF_8),
-                false);
+            JwsHeader protectedHeaderUsed = params.protectedHeader;
+            protectedHeadersUsed.add(protectedHeaderUsed);
+            String protectedHeaderEncoded = "";
+            if (protectedHeaderUsed != null) {
+                protectedHeaderEncoded = Base64Url.encode(
+                    jsonConverter.convert(protectedHeaderUsed.parameters)
+                        .getBytes(StandardCharsets.UTF_8),
+                    false);
+            }
             protectedHeadersEncoded.add(protectedHeaderEncoded);
+
+            JwsHeader unprotectedHeaderUsed = params.unprotectedHeader;
+            unprotectedHeadersUsed.add(unprotectedHeaderUsed);
+
             signatures.add(computeSignature(
-                protectedHeader.getAlgorithm(),
+                new JwsJoseHeaderUnion(protectedHeaderUsed, unprotectedHeaderUsed),
                 protectedHeaderEncoded, payloadEncoded));
         }
 
@@ -116,7 +136,8 @@ public final class JwsBuilder {
             serializedForm = switch (serialization) {
                 case COMPACT -> throw new JwsException(
                     "Compact representation doesn't support multiple signatures");
-                case JSON -> serializeJson(payloadEncoded, protectedHeadersEncoded, signatures);
+                case JSON -> serializeJson(
+                    payloadEncoded, protectedHeadersEncoded, signatures);
                 case JSON_FLAT -> throw new JwsException(
                     "Json flattened representation doesn't support multiple signatures");
             };
@@ -124,18 +145,21 @@ public final class JwsBuilder {
 
         return new JwsMultipleSignatures(
             payloadUsed,
-            protectedHeaders,
+            protectedHeadersUsed,
+            unprotectedHeadersUsed,
             signatures,
             serializedForm
         );
     }
 
     private byte[] computeSignature(
-            String algorithmName,
+            JwsJoseHeader joseHeader,
             String encodedProtectedHeader,
             String encodedPayload) {
+        String algorithmName = joseHeader.getAlgorithm();
         if (algorithmName == null) {
-            throw new IllegalStateException("Header parameter 'alg' must be present");
+            throw new IllegalStateException(
+                "Header parameter 'alg' must be present");
         }
 
         JwsAlgorithm algorithmUsed = null;
@@ -159,7 +183,11 @@ public final class JwsBuilder {
 
     private String serializeCompact(
             String encodedPayload, String encodedProtectedHeader, byte[] signature) {
-        // todo: check unprotected header
+        if (joseParams.get(0).unprotectedHeader != null) {
+            throw new IllegalStateException(
+                "Unprotected header must not be present in the jws compact representation");
+        }
+
         return encodedProtectedHeader
             + "." + encodedPayload
             + "." + Base64Url.encode(signature, false);
@@ -170,11 +198,25 @@ public final class JwsBuilder {
             List<byte[]> signatures) {
         LinkedHashMap<String, Object> obj = new LinkedHashMap<>();
         obj.put("payload", payloadEncoded);
-        List<LinkedHashMap<String, Object>> signaturesArray = new ArrayList<>();
-        for (int i = 0; i < protectedHeadersEncoded.size(); i++) {
+        List<LinkedHashMap<String, Object>> signaturesArray =
+            new ArrayList<>(joseParams.size());
+        for (int i = 0; i < joseParams.size(); i++) {
             LinkedHashMap<String, Object> signatureObj = new LinkedHashMap<>();
-            signatureObj.put("protected", protectedHeadersEncoded.get(i));
-            // signatureObj.put("header", ...); todo: unprotected headers
+            if (!protectedHeadersEncoded.get(i).isEmpty()) {
+                signatureObj.put("protected", protectedHeadersEncoded.get(i));
+            }
+            JoseParams params = joseParams.get(i);
+            if (params.unprotectedHeader != null
+                    && !params.unprotectedHeader.parameters.isEmpty()) {
+                if (!Collections.disjoint(
+                        params.protectedHeader.parameterNames(),
+                        params.unprotectedHeader.parameterNames())) {
+                    throw new IllegalStateException(
+                        "Header parameters names must be disjoint in protected and unprotected header");
+                }
+
+                signatureObj.put("header", params.unprotectedHeader.parameters);
+            }
             signatureObj.put("signature", Base64Url.encode(signatures.get(i), false));
             signaturesArray.add(signatureObj);
         }
@@ -184,13 +226,37 @@ public final class JwsBuilder {
     }
 
     private String serializeJsonFlat(
-            String encodedPayload, String encodedProtectedHeader, byte[] signature) {
+            String payloadEncoded, String protectedHeaderEncoded, byte[] signature) {
         LinkedHashMap<String, Object> obj = new LinkedHashMap<>();
-        obj.put("payload", encodedPayload);
-        obj.put("protected", encodedProtectedHeader);
-        // todo: unprotected header
+        obj.put("payload", payloadEncoded);
+        if (!protectedHeaderEncoded.isEmpty()) {
+            obj.put("protected", protectedHeaderEncoded);
+        }
+        JoseParams params = joseParams.get(0);
+        if (params.unprotectedHeader != null
+                && !params.unprotectedHeader.parameters.isEmpty()) {
+            if (!Collections.disjoint(
+                    params.protectedHeader.parameterNames(),
+                    params.unprotectedHeader.parameterNames())) {
+                throw new IllegalStateException(
+                    "Header parameters names must be disjoint in protected and unprotected header");
+            }
+
+            obj.put("header", params.unprotectedHeader.parameters);
+        }
         obj.put("signature", Base64Url.encode(signature, false));
 
         return jsonConverter.convert(obj);
+    }
+
+    static final class JoseParams {
+
+        final JwsHeader protectedHeader;
+        final JwsHeader unprotectedHeader;
+
+        JoseParams(JwsHeader protectedHeader, JwsHeader unprotectedHeader) {
+            this.protectedHeader = protectedHeader;
+            this.unprotectedHeader = unprotectedHeader;
+        }
     }
 }

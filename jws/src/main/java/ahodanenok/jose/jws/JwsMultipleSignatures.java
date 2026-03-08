@@ -1,20 +1,25 @@
 package ahodanenok.jose.jws;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 class JwsMultipleSignatures implements Jws {
 
     private final byte[] payload;
     private final List<JwsHeader> protectedHeaders;
+    private final List<JwsHeader> unprotectedHeaders;
     private final List<byte[]> signatures;
     private final String serializedForm;
 
-    JwsMultipleSignatures(byte[] payload, List<JwsHeader> protectedHeaders, List<byte[]> signatures, String serializedForm) {
-        this.payload = Objects.requireNonNull(payload);
-        this.protectedHeaders = protectedHeaders; // todo: required?
-        this.signatures = signatures; // todo: required?
+    JwsMultipleSignatures(
+            byte[] payload,
+            List<JwsHeader> protectedHeaders,
+            List<JwsHeader> unprotectedHeaders,
+            List<byte[]> signatures,
+            String serializedForm) {
+        this.payload = payload;
+        this.protectedHeaders = protectedHeaders;
+        this.unprotectedHeaders = unprotectedHeaders;
+        this.signatures = signatures;
         this.serializedForm = serializedForm;
     }
 
@@ -30,12 +35,21 @@ class JwsMultipleSignatures implements Jws {
 
     @Override
     public JwsHeader getProtectedHeader(int idx) {
+        Utils.checkBounds(idx, 0, protectedHeaders.size(),
+            () -> "Index " + idx + " is not valid");
         return protectedHeaders.get(idx);
     }
 
     @Override
-    public List<JwsHeader> getProtectedHeaders() {
-        return Collections.unmodifiableList(protectedHeaders);
+    public JwsHeader getUnprotectedHeader() {
+        return unprotectedHeaders.get(0);
+    }
+
+    @Override
+    public JwsHeader getUnprotectedHeader(int idx) {
+        Utils.checkBounds(idx, 0, protectedHeaders.size(),
+            () -> "Index " + idx + " is not valid");
+        return unprotectedHeaders.get(idx);
     }
 
     @Override
@@ -45,6 +59,8 @@ class JwsMultipleSignatures implements Jws {
 
     @Override
     public byte[] getSignature(int idx) {
+        Utils.checkBounds(idx, 0, protectedHeaders.size(),
+            () -> "Index " + idx + " is not valid");
         return signatures.get(idx);
     }
 
