@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import ahodanenok.jose.common.JsonParser;
+import ahodanenok.jose.jws.algorithm.JwsAlgorithm;
 
 public final class JwsParserBuilder {
 

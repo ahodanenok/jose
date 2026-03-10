@@ -1,4 +1,4 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.jws.algorithm;
 
 /**
  * No digital signature or MAC performed

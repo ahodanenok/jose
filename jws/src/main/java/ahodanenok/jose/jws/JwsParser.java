@@ -8,6 +8,7 @@ import java.util.Map;
 
 import ahodanenok.jose.common.Base64Url;
 import ahodanenok.jose.common.JsonParser;
+import ahodanenok.jose.jws.algorithm.JwsAlgorithm;
 
 public final class JwsParser {
 

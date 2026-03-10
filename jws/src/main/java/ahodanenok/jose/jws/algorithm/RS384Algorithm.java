@@ -1,4 +1,4 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.jws.algorithm;
 
 /**
  * RSASSA-PKCS1-v1_5 using SHA-384

@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import ahodanenok.jose.common.Base64Url;
 import ahodanenok.jose.common.JsonConverter;
+import ahodanenok.jose.jws.algorithm.JwsAlgorithm;
 
 public final class JwsBuilder {
 

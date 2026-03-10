@@ -6,6 +6,8 @@ import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.Test;
 
 import ahodanenok.jose.common.Base64Url;
+import ahodanenok.jose.jws.algorithm.HS256Algorithm;
+import ahodanenok.jose.jws.algorithm.NoneAlgorithm;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;

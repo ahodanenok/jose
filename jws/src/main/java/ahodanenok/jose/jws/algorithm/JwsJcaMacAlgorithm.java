@@ -1,4 +1,4 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.jws.algorithm;
 
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import javax.crypto.Mac;
+
+import ahodanenok.jose.jws.JwsException;
 
 abstract class JwsJcaMacAlgorithm implements JwsAlgorithm {
 

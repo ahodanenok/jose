@@ -1,4 +1,4 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.jws.algorithm;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -9,6 +9,8 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.util.Objects;
+
+import ahodanenok.jose.jws.JwsException;
 
 abstract class JwsJcaSignatureAlgorithm implements JwsAlgorithm {
 

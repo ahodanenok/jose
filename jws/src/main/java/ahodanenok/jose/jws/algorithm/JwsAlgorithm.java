@@ -1,4 +1,4 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.jws.algorithm;
 
 public interface JwsAlgorithm {
 

@@ -1,4 +1,4 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.jws.algorithm;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
