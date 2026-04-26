@@ -1,6 +1,6 @@
 package ahodanenok.jose.jwe.algorithm;
 
-import ahodanenok.jose.jwe.JweHeader;
+import ahodanenok.jose.jwe.JweJoseHeader;
 
 public interface JweKeyAlgorithm {
 
@@ -8,9 +8,9 @@ public interface JweKeyAlgorithm {
 
     KeyManagementMode getKeyManagementMode();
 
-    byte[] generateKey(JweHeader params);
+    Object getKey(JweJoseHeader params);
 
-    byte[] encryptKey(byte[] key, JweHeader params);
+    byte[] encryptKey(Object key, JweJoseHeader params);
 
-    byte[] decryptKey(byte[] key, JweHeader params);
+    Object decryptKey(byte[] key, JweJoseHeader params);
 }

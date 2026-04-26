@@ -1,12 +1,16 @@
 package ahodanenok.jose.jwe.algorithm;
 
-import ahodanenok.jose.jwe.JweHeader;
+import ahodanenok.jose.jwe.JweJoseHeader;
 
 public interface JweEncryptionAlgorithm {
 
     String getName();
 
-    byte[] encrypt(byte[] payload, Object key, JweHeader params);
+    Object generateKey(JweJoseHeader params);
 
-    byte[] decrypt(byte[] payload, Object key, JweHeader params);
+    byte[] generateInitializationVector();
+
+    EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad, JweJoseHeader params);
+
+    byte[] decrypt(byte[] payload, Object key, JweJoseHeader params);
 }

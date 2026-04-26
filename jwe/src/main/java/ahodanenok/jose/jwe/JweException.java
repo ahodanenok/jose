@@ -1,4 +1,4 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.jwe;
 
 import ahodanenok.jose.common.JoseException;
 
