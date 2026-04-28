@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import ahodanenok.jose.common.Base64Url;
@@ -124,7 +125,12 @@ public final class JweBuilder {
                     encodedInitializationVector,
                     encodedCiphertext,
                     encodedAuthenticationTag);
-                case JSON_FLAT -> serializeJsonFlat();
+                case JSON_FLAT -> serializeJsonFlat(
+                    encodedProtectedHeader,
+                    encodedEncryptedKey,
+                    encodedInitializationVector,
+                    encodedCiphertext,
+                    encodedAuthenticationTag);
                 case JSON -> serializeJson();
             };
         }
@@ -172,8 +178,34 @@ public final class JweBuilder {
             + "." + encodedAuthenticationTag;
     }
 
-    private String serializeJsonFlat() {
-        return null;
+    private String serializeJsonFlat(
+            String encodedProtectedHeader,
+            String encodedEncryptedKey,
+            String encodedInitializationVector,
+            String encodedCiphertext,
+            String encodedAuthenticationTag) {
+        Map<String, Object> jwe = new LinkedHashMap<>();
+        if (!encodedProtectedHeader.isEmpty()) {
+            jwe.put("protected", encodedProtectedHeader);
+        }
+        if (unprotectedHeader != null) {
+            jwe.put("unprotected", unprotectedHeader.parameters);
+        }
+        if (!encodedEncryptedKey.isEmpty()) {
+            jwe.put("encrypted_key", encodedEncryptedKey);
+        }
+        if (additionalAuthenticatedData != null) {
+            jwe.put("aad", Base64Url.encode(additionalAuthenticatedData, false));
+        }
+        if (!encodedInitializationVector.isEmpty()) {
+            jwe.put("iv", encodedInitializationVector);
+        }
+        jwe.put("ciphertext", encodedCiphertext);
+        if (!encodedAuthenticationTag.isEmpty()) {
+            jwe.put("tag", encodedAuthenticationTag);
+        }
+
+        return jsonConverter.convert(jwe);
     }
 
     private String serializeJson() {
