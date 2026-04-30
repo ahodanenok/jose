@@ -12,5 +12,11 @@ public interface Jwe {
 
     JweHeader getUnprotectedHeader();
 
+    JweHeader getRecipientHeader();
+
+    JweHeader getRecipientHeader(int idx);
+
+    int getRecipientCount();
+
     String asString();
 }

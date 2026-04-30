@@ -2,6 +2,8 @@ package ahodanenok.jose.jws;
 
 import java.util.List;
 
+import ahodanenok.jose.common.Utils;
+
 class JwsMultipleSignatures implements Jws {
 
     private final byte[] payload;
@@ -35,8 +37,7 @@ class JwsMultipleSignatures implements Jws {
 
     @Override
     public JwsHeader getProtectedHeader(int idx) {
-        Utils.checkBounds(idx, 0, protectedHeaders.size(),
-            () -> "Index " + idx + " is not valid");
+        Utils.checkBounds(idx, 0, protectedHeaders.size());
         return protectedHeaders.get(idx);
     }
 
@@ -47,8 +48,7 @@ class JwsMultipleSignatures implements Jws {
 
     @Override
     public JwsHeader getUnprotectedHeader(int idx) {
-        Utils.checkBounds(idx, 0, protectedHeaders.size(),
-            () -> "Index " + idx + " is not valid");
+        Utils.checkBounds(idx, 0, protectedHeaders.size());
         return unprotectedHeaders.get(idx);
     }
 
@@ -59,8 +59,7 @@ class JwsMultipleSignatures implements Jws {
 
     @Override
     public byte[] getSignature(int idx) {
-        Utils.checkBounds(idx, 0, protectedHeaders.size(),
-            () -> "Index " + idx + " is not valid");
+        Utils.checkBounds(idx, 0, protectedHeaders.size());
         return signatures.get(idx);
     }
 

@@ -1,25 +1,27 @@
 package ahodanenok.jose.jwe;
 
+import java.util.List;
+
 import ahodanenok.jose.common.Utils;
 
-class JweOneRecipient implements Jwe {
+class JweMultipleRecipients implements Jwe {
 
     private final byte[] payload;
     private final JweHeader protectedHeader;
     private final JweHeader unprotectedHeader;
-    private final JweHeader recipientHeader;
+    private final List<JweHeader> recipientHeaders;
     private final String serializedForm;
 
-    JweOneRecipient(
+    JweMultipleRecipients(
             byte[] payload,
             JweHeader protectedHeader,
             JweHeader unprotectedHeader,
-            JweHeader recipientHeader,
+            List<JweHeader> recipientHeaders,
             String serializedForm) {
         this.payload = payload;
         this.protectedHeader = protectedHeader;
         this.unprotectedHeader = unprotectedHeader;
-        this.recipientHeader = recipientHeader;
+        this.recipientHeaders = recipientHeaders;
         this.serializedForm = serializedForm;
     }
 
@@ -40,18 +42,18 @@ class JweOneRecipient implements Jwe {
 
     @Override
     public JweHeader getRecipientHeader() {
-        return recipientHeader;
+        return recipientHeaders.get(0);
     }
 
     @Override
     public JweHeader getRecipientHeader(int idx) {
-        Utils.checkBounds(idx, 0, 1);
-        return recipientHeader;
+        Utils.checkBounds(idx, 0, recipientHeaders.size());
+        return recipientHeaders.get(idx);
     }
 
     @Override
     public int getRecipientCount() {
-        return 1;
+        return recipientHeaders.size();
     }
 
     @Override

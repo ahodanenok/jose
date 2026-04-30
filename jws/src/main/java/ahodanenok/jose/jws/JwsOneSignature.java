@@ -2,6 +2,8 @@ package ahodanenok.jose.jws;
 
 import java.util.List;
 
+import ahodanenok.jose.common.Utils;
+
 class JwsOneSignature implements Jws {
 
     private final byte[] payload;
@@ -35,11 +37,8 @@ class JwsOneSignature implements Jws {
 
     @Override
     public JwsHeader getProtectedHeader(int idx) {
-        if (idx == 0) {
-            return protectedHeader;
-        } else {
-            throw new IndexOutOfBoundsException("Index " + idx + " is not valid");
-        }
+        Utils.checkBounds(idx, 0, 1);
+        return protectedHeader;
     }
 
     @Override
@@ -49,11 +48,8 @@ class JwsOneSignature implements Jws {
 
     @Override
     public JwsHeader getUnprotectedHeader(int idx) {
-        if (idx == 0) {
-            return unprotectedHeader;
-        } else {
-            throw new IndexOutOfBoundsException("Index " + idx + " is not valid");
-        }
+        Utils.checkBounds(idx, 0, 1);
+        return unprotectedHeader;
     }
 
     @Override
@@ -63,11 +59,8 @@ class JwsOneSignature implements Jws {
 
     @Override
     public byte[] getSignature(int idx) {
-        if (idx == 0) {
-            return signature;
-        } else {
-            throw new IndexOutOfBoundsException("Index " + idx + " is not valid");
-        }
+        Utils.checkBounds(idx, 0, 1);
+        return signature;
     }
 
     @Override

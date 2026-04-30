@@ -4,10 +4,12 @@ class JweHeaderUnion implements JweJoseHeader {
 
     private final JweHeader a;
     private final JweHeader b;
+    private final JweHeader c;
 
-    JweHeaderUnion(JweHeader a, JweHeader b) {
+    JweHeaderUnion(JweHeader a, JweHeader b, JweHeader c) {
         this.a = a;
         this.b = b;
+        this.c = c;
     }
 
     @Override
@@ -29,6 +31,10 @@ class JweHeaderUnion implements JweJoseHeader {
 
         if (value == null && b != null) {
             value = b.get(name);
+        }
+
+        if (value == null && c != null) {
+            value = c.get(name);
         }
 
         return (T) value;

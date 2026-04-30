@@ -1,10 +1,14 @@
-package ahodanenok.jose.jws;
+package ahodanenok.jose.common;
 
 import java.util.function.Supplier;
 
-class Utils {
+public final class Utils {
 
-    static void checkBounds(
+    public static void checkBounds(int idx, int from, int to) {
+        checkBounds(idx, from, to, () -> "Index " + idx + " is not valid");
+    }
+
+    public static void checkBounds(
             int idx, int from, int to, Supplier<String> messageSupplier) {
         if (idx < from || idx >= to) {
             throw new IndexOutOfBoundsException(messageSupplier.get());

@@ -20,6 +20,7 @@ public final class JweBuilder {
     private byte[] payload;
     private JweHeader protectedHeader;
     private JweHeader unprotectedHeader;
+    private List<JweHeader> recipientHeaders;
     private JweSerialization serialization;
     private JsonConverter jsonConverter;
     private List<JweKeyAlgorithm> keyAlgorithms = new ArrayList<>();
@@ -37,6 +38,10 @@ public final class JweBuilder {
 
     public JweHeaderParams withUnprotectedHeader() {
         return new JweHeaderParams(header -> unprotectedHeader = header);
+    }
+
+    public JweRecipientParams withRecipientHeader() {
+        return new JweRecipientParams();
     }
 
     public JweBuilder withAdditionalAuthenticatedData(byte[] additionalAuthenticatedData) {
@@ -65,7 +70,10 @@ public final class JweBuilder {
     }
 
     public Jwe create() {
-        JweJoseHeader joseHeader = new JweHeaderUnion(protectedHeader, unprotectedHeader);
+        JweHeader recipientHeader = recipientHeaders != null && !recipientHeaders.isEmpty()
+            ? recipientHeaders.get(0) : null;
+        JweJoseHeader joseHeader = new JweHeaderUnion(
+            recipientHeader, protectedHeader, unprotectedHeader);
         JweKeyAlgorithm keyAlgorithm = getKeyAlgorithm(joseHeader);
         JweEncryptionAlgorithm encryptionAlgorithm = getEncryptionAlgorithm(joseHeader);
 
@@ -76,16 +84,6 @@ public final class JweBuilder {
             case DIRECT_KEY_AGREEMENT, DIRECT_ENCRYPTION
                 -> keyAlgorithm.getKey(joseHeader);
         };
-
-        String encodedEncryptedKey;
-        if (keyManagementMode == KeyManagementMode.KEY_WRAPPING
-                || keyManagementMode == KeyManagementMode.KEY_ENCRYPTION
-                || keyManagementMode == KeyManagementMode.KEY_AGREEMENT_WITH_KEY_WRAPPING) {
-            encodedEncryptedKey = Base64Url.encode(
-                keyAlgorithm.encryptKey(key, joseHeader), false);
-        } else {
-            encodedEncryptedKey = "";
-        }
 
         String encodedProtectedHeader;
         if (protectedHeader != null) {
@@ -116,31 +114,84 @@ public final class JweBuilder {
         String encodedCiphertext = Base64Url.encode(result.ciphertext(), false);
         String encodedAuthenticationTag = Base64Url.encode(result.authenticationTag(), false);
 
-        String serializedForm = null;
-        if (serialization != null) {
-            serializedForm = switch (serialization) {
-                case COMPACT -> serializeCompact(
-                    encodedProtectedHeader,
-                    encodedEncryptedKey,
-                    encodedInitializationVector,
-                    encodedCiphertext,
-                    encodedAuthenticationTag);
-                case JSON_FLAT -> serializeJsonFlat(
-                    encodedProtectedHeader,
-                    encodedEncryptedKey,
-                    encodedInitializationVector,
-                    encodedCiphertext,
-                    encodedAuthenticationTag);
-                case JSON -> serializeJson();
-            };
-        }
+        if (recipientHeaders == null || recipientHeaders.size() <= 1) {
+            String encodedEncryptedKey = encodeEncryptKey(key, keyAlgorithm, joseHeader);
+            String serializedForm = null;
+            if (serialization != null) {
+                serializedForm = switch (serialization) {
+                    case COMPACT -> serializeCompact(
+                        encodedProtectedHeader,
+                        unprotectedHeader,
+                        recipientHeader,
+                        encodedEncryptedKey,
+                        encodedInitializationVector,
+                        encodedCiphertext,
+                        encodedAuthenticationTag);
+                    case JSON_FLAT -> serializeJsonFlat(
+                        encodedProtectedHeader,
+                        unprotectedHeader,
+                        recipientHeader,
+                        encodedEncryptedKey,
+                        encodedInitializationVector,
+                        encodedCiphertext,
+                        encodedAuthenticationTag);
+                    case JSON -> serializeJson(
+                        encodedProtectedHeader,
+                        unprotectedHeader,
+                        recipientHeaders,
+                        List.of(encodedEncryptedKey),
+                        encodedInitializationVector,
+                        encodedCiphertext,
+                        encodedAuthenticationTag);
+                };
+            }
 
-        return new JweOneRecipient(
-            payloadUsed,
-            protectedHeader,
-            unprotectedHeader,
-            serializedForm
-        );
+            return new JweOneRecipient(
+                payloadUsed,
+                protectedHeader,
+                unprotectedHeader,
+                recipientHeader,
+                serializedForm);
+        } else {
+            List<String> encodedEncryptedKeys = new ArrayList<>();
+            encodedEncryptedKeys.add(encodeEncryptKey(key, keyAlgorithm, joseHeader));
+            for (int i = 1; i < recipientHeaders.size(); i++) {
+                joseHeader = new JweHeaderUnion(
+                    recipientHeaders.get(i), protectedHeader, unprotectedHeader);
+                JweKeyAlgorithm recipientKeyAlgorithm = getKeyAlgorithm(joseHeader);
+                if (!isCompatibleKeyManagementMode(
+                        keyManagementMode,
+                        recipientKeyAlgorithm.getKeyManagementMode())) {
+                    throw new JweException(
+                        "Can't simultaneously encrypt CEK with algorithms '%s' and '%s'"
+                            .formatted(keyAlgorithm.getName(), recipientKeyAlgorithm.getName()));
+                }
+                encodedEncryptedKeys.add(encodeEncryptKey(
+                    key, recipientKeyAlgorithm, joseHeader));
+            }
+
+            String serializedForm = switch(serialization) {
+                case COMPACT -> throw new JweException(
+                    "Compact representation doesn't support multiple recipients");
+                case JSON_FLAT -> throw new JweException(
+                    "Json flattened representation doesn't support multiple recipients");
+                case JSON -> serializeJson(
+                    encodedProtectedHeader,
+                    unprotectedHeader,
+                    recipientHeaders,
+                    encodedEncryptedKeys,
+                    encodedInitializationVector,
+                    encodedCiphertext,
+                    encodedAuthenticationTag);
+            };
+
+            return new JweMultipleRecipients(
+                payload,
+                protectedHeader,
+                unprotectedHeader,
+                recipientHeaders,
+                serializedForm);
+        }
     }
 
     private JweKeyAlgorithm getKeyAlgorithm(JweJoseHeader joseHeader) {
@@ -165,12 +216,34 @@ public final class JweBuilder {
         throw new JweException("Encryption algorithm '%s' not found".formatted(algorithmName));
     }
 
+    private boolean isCompatibleKeyManagementMode(KeyManagementMode a, KeyManagementMode b) {
+        return a == b
+            || a == KeyManagementMode.KEY_WRAPPING && b == KeyManagementMode.KEY_ENCRYPTION
+            || a == KeyManagementMode.KEY_WRAPPING && b == KeyManagementMode.KEY_AGREEMENT_WITH_KEY_WRAPPING
+            || a == KeyManagementMode.KEY_ENCRYPTION && b == KeyManagementMode.KEY_WRAPPING
+            || a == KeyManagementMode.KEY_ENCRYPTION && b == KeyManagementMode.KEY_AGREEMENT_WITH_KEY_WRAPPING
+            || a == KeyManagementMode.KEY_AGREEMENT_WITH_KEY_WRAPPING && b == KeyManagementMode.KEY_WRAPPING
+            || a == KeyManagementMode.KEY_AGREEMENT_WITH_KEY_WRAPPING && b == KeyManagementMode.KEY_ENCRYPTION;
+    }
+
     private String serializeCompact(
             String encodedProtectedHeader,
+            JweHeader unprotectedHeader,
+            JweHeader recipientHeader,
             String encodedEncryptedKey,
             String encodedInitializationVector,
             String encodedCiphertext,
             String encodedAuthenticationTag) {
+        if (unprotectedHeader != null) {
+            throw new JweException(
+                "Compact representation doesn't support unprotected header");
+        }
+
+        if (recipientHeader != null) {
+            throw new JweException(
+                "Compact representation doesn't support recipient header");
+        }
+
         return encodedProtectedHeader
             + "." + encodedEncryptedKey
             + "." + encodedInitializationVector
@@ -180,6 +253,8 @@ public final class JweBuilder {
 
     private String serializeJsonFlat(
             String encodedProtectedHeader,
+            JweHeader unprotectedHeader,
+            JweHeader recipientHeader,
             String encodedEncryptedKey,
             String encodedInitializationVector,
             String encodedCiphertext,
@@ -190,6 +265,9 @@ public final class JweBuilder {
         }
         if (unprotectedHeader != null) {
             jwe.put("unprotected", unprotectedHeader.parameters);
+        }
+        if (recipientHeader != null) {
+            jwe.put("header", recipientHeader.parameters);
         }
         if (!encodedEncryptedKey.isEmpty()) {
             jwe.put("encrypted_key", encodedEncryptedKey);
@@ -208,8 +286,58 @@ public final class JweBuilder {
         return jsonConverter.convert(jwe);
     }
 
-    private String serializeJson() {
-        return null;
+    private String serializeJson(
+            String encodedProtectedHeader,
+            JweHeader unprotectedHeader,
+            List<JweHeader> recipientHeaders,
+            List<String> encodedEncryptedKeys,
+            String encodedInitializationVector,
+            String encodedCiphertext,
+            String encodedAuthenticationTag) {
+        Map<String, Object> jwe = new LinkedHashMap<>();
+        if (!encodedProtectedHeader.isEmpty()) {
+            jwe.put("protected", encodedProtectedHeader);
+        }
+        if (unprotectedHeader != null) {
+            jwe.put("unprotected", unprotectedHeader.parameters);
+        }
+        List<Map<String, Object>> recipients = new ArrayList<>();
+        for (int i = 0; i < recipientHeaders.size(); i++) {
+            Map<String, Object> recipient = new LinkedHashMap<>();
+            JweHeader recipientHeader = recipientHeaders.get(i);
+            if (recipientHeader != null) {
+                recipient.put("header", recipientHeader.parameters);
+            }
+            String encodedEncryptedKey = encodedEncryptedKeys.get(i);
+            if (!encodedEncryptedKey.isEmpty()) {
+                recipient.put("encrypted_key", encodedEncryptedKey);
+            }
+            recipients.add(recipient);
+        }
+        jwe.put("recipients", recipients);
+        if (additionalAuthenticatedData != null) {
+            jwe.put("aad", Base64Url.encode(additionalAuthenticatedData, false));
+        }
+        if (!encodedInitializationVector.isEmpty()) {
+            jwe.put("iv", encodedInitializationVector);
+        }
+        jwe.put("ciphertext", encodedCiphertext);
+        if (!encodedAuthenticationTag.isEmpty()) {
+            jwe.put("tag", encodedAuthenticationTag);
+        }
+
+        return jsonConverter.convert(jwe);
+    }
+
+    private String encodeEncryptKey(Object key, JweKeyAlgorithm keyAlgorithm, JweJoseHeader joseHeader) {
+        KeyManagementMode keyManagementMode = keyAlgorithm.getKeyManagementMode();
+        if (keyManagementMode == KeyManagementMode.KEY_WRAPPING
+                || keyManagementMode == KeyManagementMode.KEY_ENCRYPTION
+                || keyManagementMode == KeyManagementMode.KEY_AGREEMENT_WITH_KEY_WRAPPING) {
+            return Base64Url.encode(keyAlgorithm.encryptKey(key, joseHeader), false);
+        } else {
+            return "";
+        }
     }
 
     public final class JweHeaderParams {
@@ -232,6 +360,27 @@ public final class JweBuilder {
         public JweBuilder set() {
             // todo: invalidate to prevent reuse?
             paramsConsumer.accept(new JweHeader(params));
+            return JweBuilder.this;
+        }
+    }
+
+    public final class JweRecipientParams {
+
+        // Use LinkedHashMap to allow generation of json with the same order of params
+        private final LinkedHashMap<String, Object> params = new LinkedHashMap<>();
+
+        public JweRecipientParams param(String name, Object value) {
+            // todo: value nullable?
+            params.put(Objects.requireNonNull(name), value);
+            return this;
+        }
+
+        public JweBuilder add() {
+            // todo: invalidate to prevent reuse?
+            if (recipientHeaders == null) {
+                recipientHeaders = new ArrayList<>();
+            }
+            recipientHeaders.add(new JweHeader(params));
             return JweBuilder.this;
         }
     }
