@@ -12,5 +12,5 @@ public interface JweKeyAlgorithm {
 
     byte[] encryptKey(Object key, JweJoseHeader params);
 
-    Object decryptKey(byte[] key, JweJoseHeader params);
+    Object decryptKey(byte[] key, String keyAlgorithmName, JweJoseHeader params);
 }
