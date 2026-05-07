@@ -16,18 +16,18 @@ import ahodanenok.jose.jwe.JweException;
 import ahodanenok.jose.jwe.JweJoseHeader;
 
 /**
- * Key Encryption with RSAES-PKCS1-v1_5
+ * Key Encryption with RSAES OAEP using default parameters
  */
-public final class RsaPkcs1KeyAlgorithm implements JweKeyAlgorithm {
+public final class RsaOaepKeyAlgorithm implements JweKeyAlgorithm {
 
     private final Cipher cipher;
     private PublicKey publicKey;
     private Certificate certificate;
     private PrivateKey privateKey;
 
-    public RsaPkcs1KeyAlgorithm() {
+    public RsaOaepKeyAlgorithm() {
         try {
-            this.cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            this.cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             throw new JweException("The algorithm '%s' is not supported".formatted(getName()), e);
         }
@@ -49,7 +49,7 @@ public final class RsaPkcs1KeyAlgorithm implements JweKeyAlgorithm {
 
     @Override
     public String getName() {
-        return "RSA1_5";
+        return "RSA-OAEP";
     }
 
     @Override
