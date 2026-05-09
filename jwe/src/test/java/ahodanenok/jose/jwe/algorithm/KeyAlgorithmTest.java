@@ -8,6 +8,7 @@ import java.security.spec.MGF1ParameterSpec;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 
@@ -94,6 +95,60 @@ public class KeyAlgorithmTest {
         assertEquals(secretKey, cipher.unwrap(encryptedKey, "AES", Cipher.SECRET_KEY));
 
         alg.decryptWithPrivateKey(keyPair.getPrivate());
+        assertEquals(secretKey, alg.decryptKey(encryptedKey, "AES", null));
+    }
+
+    @Test
+    public void test_A128KW() throws Exception {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+        keyGenerator.init(128);
+        SecretKey secretKey = keyGenerator.generateKey();
+
+        A128KWKeyAlgorithm alg = new A128KWKeyAlgorithm(secretKey);
+        assertEquals("A128KW", alg.getName());
+        assertEquals(null, alg.getKey(null));
+        assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
+
+        byte[] encryptedKey = alg.encryptKey(secretKey, null);
+        Cipher cipher = Cipher.getInstance("AESWrap_128");
+        cipher.init(Cipher.UNWRAP_MODE, secretKey);
+        assertEquals(secretKey, cipher.unwrap(encryptedKey, "AES", Cipher.SECRET_KEY));
+        assertEquals(secretKey, alg.decryptKey(encryptedKey, "AES", null));
+    }
+
+    @Test
+    public void test_A192KW() throws Exception {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+        keyGenerator.init(192);
+        SecretKey secretKey = keyGenerator.generateKey();
+
+        A192KWKeyAlgorithm alg = new A192KWKeyAlgorithm(secretKey);
+        assertEquals("A192KW", alg.getName());
+        assertEquals(null, alg.getKey(null));
+        assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
+
+        byte[] encryptedKey = alg.encryptKey(secretKey, null);
+        Cipher cipher = Cipher.getInstance("AESWrap_192");
+        cipher.init(Cipher.UNWRAP_MODE, secretKey);
+        assertEquals(secretKey, cipher.unwrap(encryptedKey, "AES", Cipher.SECRET_KEY));
+        assertEquals(secretKey, alg.decryptKey(encryptedKey, "AES", null));
+    }
+
+    @Test
+    public void test_A256KW() throws Exception {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+        keyGenerator.init(256);
+        SecretKey secretKey = keyGenerator.generateKey();
+
+        A256KWKeyAlgorithm alg = new A256KWKeyAlgorithm(secretKey);
+        assertEquals("A256KW", alg.getName());
+        assertEquals(null, alg.getKey(null));
+        assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
+
+        byte[] encryptedKey = alg.encryptKey(secretKey, null);
+        Cipher cipher = Cipher.getInstance("AESWrap_256");
+        cipher.init(Cipher.UNWRAP_MODE, secretKey);
+        assertEquals(secretKey, cipher.unwrap(encryptedKey, "AES", Cipher.SECRET_KEY));
         assertEquals(secretKey, alg.decryptKey(encryptedKey, "AES", null));
     }
 }
