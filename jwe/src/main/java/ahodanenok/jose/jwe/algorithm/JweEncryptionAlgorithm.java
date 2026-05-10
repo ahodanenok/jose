@@ -10,7 +10,7 @@ public interface JweEncryptionAlgorithm {
 
     byte[] generateInitializationVector();
 
-    EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad, JweJoseHeader params);
+    EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad);
 
-    byte[] decrypt(byte[] payload, Object key, JweJoseHeader params);
+    byte[] decrypt(byte[] payload, Object key, byte[] iv, byte[] aad, byte[] authenticationTag);
 }

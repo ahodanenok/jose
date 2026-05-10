@@ -19,7 +19,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import ahodanenok.jose.jwe.JweException;
 import ahodanenok.jose.jwe.JweJoseHeader;
 
-abstract class JweJcaAesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
+abstract class AGCMEncryptionAlgorithm implements JweEncryptionAlgorithm {
 
     private final String jweAlgorithmName;
     private final int keySize;
@@ -27,7 +27,7 @@ abstract class JweJcaAesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm
     private final KeyGenerator keyGenerator;
     private JweRandom random;
 
-    JweJcaAesGcmEncryptionAlgorithm(String jweAlgorithmName, int keySize) {
+    AGCMEncryptionAlgorithm(String jweAlgorithmName, int keySize) {
         this.jweAlgorithmName = jweAlgorithmName;
         this.keySize = keySize;
         try {
@@ -39,7 +39,7 @@ abstract class JweJcaAesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm
         this.random = JweRandom.from(new SecureRandom());
     }
 
-    JweJcaAesGcmEncryptionAlgorithm(String jweAlgorithmName, int keySize, String random, String provider) {
+    AGCMEncryptionAlgorithm(String jweAlgorithmName, int keySize, String random, String provider) {
         this.jweAlgorithmName = jweAlgorithmName;
         this.keySize = keySize;
         try {
@@ -55,7 +55,7 @@ abstract class JweJcaAesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm
         }
     }
 
-    public final JweJcaAesGcmEncryptionAlgorithm useRandom(JweRandom random) {
+    public final AGCMEncryptionAlgorithm useRandom(JweRandom random) {
         this.random = Objects.requireNonNull(random);
         return this;
     }
@@ -79,7 +79,7 @@ abstract class JweJcaAesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm
     }
 
     @Override
-    public final EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad, JweJoseHeader params) {
+    public final EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad) {
         if (!(key instanceof Key)) {
             throw new JweException("Invalid key, must be an instance of java.security.Key");
         }
@@ -103,8 +103,18 @@ abstract class JweJcaAesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm
     }
 
     @Override
-    public final byte[] decrypt(byte[] payload, Object key, JweJoseHeader params) {
-        // todo: impl
-        return null;
+    public final byte[] decrypt(byte[] payload, Object key, byte[] iv, byte[] aad, byte[] authenticationTag) {
+        try {
+            cipher.init(Cipher.DECRYPT_MODE, (Key) key, new GCMParameterSpec(128, iv));
+        } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
+            throw new JweException("Invalid key", e);
+        }
+        cipher.updateAAD(aad);
+        try {
+            cipher.update(payload);
+            return cipher.doFinal(authenticationTag);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new JweException("Failed to decrypt payload", e);
+        }
     }
 }

@@ -110,7 +110,7 @@ public final class JweBuilder {
         byte[] payloadUsed = payload;
         // todo: If a "zip" parameter was included, compress the plaintext
 
-        EncryptionResult result = encryptionAlgorithm.encrypt(payloadUsed, key, iv, aad, joseHeader);
+        EncryptionResult result = encryptionAlgorithm.encrypt(payloadUsed, key, iv, aad);
         String encodedCiphertext = Base64Url.encode(result.ciphertext(), false);
         String encodedAuthenticationTag = Base64Url.encode(result.authenticationTag(), false);
 

@@ -29,12 +29,16 @@ public class EncryptionAlgorithmTest {
         byte[] aad = TestUtils.bytes(0x01, 0x02, 0x03, 0x04, 0x3, 0x2, 0x01);
 
         EncryptionResult encryptionResult = alg.encrypt(
-            "Hello, world!".getBytes(StandardCharsets.UTF_8), key, iv, aad, null);
+            "Hello, world!".getBytes(StandardCharsets.UTF_8), key, iv, aad);
         assertArrayEquals(
             TestUtils.bytes(0xF3, 0xDC, 0x1E, 0x8D, 0xDA, 0x6C, 0x70, 0x03, 0x63, 0xCB, 0xE7, 0x75, 0x46),
             encryptionResult.ciphertext());
         assertArrayEquals(
             TestUtils.bytes(0xC1, 0xA3, 0x05, 0x0D, 0x5E, 0xF6, 0x6A, 0x08, 0xC5, 0x43, 0x34, 0xFA, 0x4E, 0xA0, 0x01, 0x97),
             encryptionResult.authenticationTag());
+
+        assertArrayEquals(
+            "Hello, world!".getBytes(StandardCharsets.UTF_8),
+            alg.decrypt(encryptionResult.ciphertext(), key, iv, aad, encryptionResult.authenticationTag()));
     }
 }
