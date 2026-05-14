@@ -4,7 +4,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.jupiter.api.Test;
 
-import ahodanenok.jose.jwe.algorithm.A128GCMEncryptionAlgorithm;
+import ahodanenok.jose.jwe.algorithm.A128GcmEncryptionAlgorithm;
 import ahodanenok.jose.jwe.algorithm.DirectKeyAlgorithm;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -23,7 +23,7 @@ public class JweBuilderTest {
             .withAdditionalAuthenticatedData(TestUtils.bytes(0xAB))
             .allowedKeyAlgorithm(new DirectKeyAlgorithm(new SecretKeySpec(
                 TestUtils.bytes(0x39, 0x3c, 0xa1, 0x5b, 0xec, 0x54, 0x1e, 0xff, 0x8c, 0xde, 0x67, 0xb9, 0x66, 0x9c, 0x2f, 0x3c), "AES")))
-            .allowedEncryptionAlgorithm(new A128GCMEncryptionAlgorithm().useRandom(
+            .allowedEncryptionAlgorithm(new A128GcmEncryptionAlgorithm().useRandom(
                 b -> TestUtils.fill(b, 0x41, 0x6f, 0x16, 0x60, 0xe6, 0xf4, 0x71, 0xed, 0x45, 0xe2, 0x35, 0xf5)))
             .serializedAs(JweSerialization.COMPACT)
             .useJsonConverter(new JacksonJson())
@@ -50,7 +50,7 @@ public class JweBuilderTest {
             .withAdditionalAuthenticatedData(TestUtils.bytes(0xAB))
             .allowedKeyAlgorithm(new DirectKeyAlgorithm(new SecretKeySpec(
                 TestUtils.bytes(0x39, 0x3c, 0xa1, 0x5b, 0xec, 0x54, 0x1e, 0xff, 0x8c, 0xde, 0x67, 0xb9, 0x66, 0x9c, 0x2f, 0x3c), "AES")))
-            .allowedEncryptionAlgorithm(new A128GCMEncryptionAlgorithm().useRandom(
+            .allowedEncryptionAlgorithm(new A128GcmEncryptionAlgorithm().useRandom(
                 b -> TestUtils.fill(b, 0x41, 0x6f, 0x16, 0x60, 0xe6, 0xf4, 0x71, 0xed, 0x45, 0xe2, 0x35, 0xf5)))
             .serializedAs(JweSerialization.JSON_FLAT)
             .useJsonConverter(new JacksonJson())
@@ -83,7 +83,7 @@ public class JweBuilderTest {
             .withAdditionalAuthenticatedData(TestUtils.bytes(0xAB))
             .allowedKeyAlgorithm(new DirectKeyAlgorithm(new SecretKeySpec(
                 TestUtils.bytes(0x39, 0x3c, 0xa1, 0x5b, 0xec, 0x54, 0x1e, 0xff, 0x8c, 0xde, 0x67, 0xb9, 0x66, 0x9c, 0x2f, 0x3c), "AES")))
-            .allowedEncryptionAlgorithm(new A128GCMEncryptionAlgorithm().useRandom(
+            .allowedEncryptionAlgorithm(new A128GcmEncryptionAlgorithm().useRandom(
                 b -> TestUtils.fill(b, 0x41, 0x6f, 0x16, 0x60, 0xe6, 0xf4, 0x71, 0xed, 0x45, 0xe2, 0x35, 0xf5)))
             .serializedAs(JweSerialization.JSON)
             .useJsonConverter(new JacksonJson())

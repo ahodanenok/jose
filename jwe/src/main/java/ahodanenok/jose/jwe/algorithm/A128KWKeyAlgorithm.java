@@ -5,9 +5,9 @@ import javax.crypto.SecretKey;
 /**
  * AES Key Wrap with default initial value using 128-bit key
  */
-public final class A128KWKeyAlgorithm extends JcaAesKwKeyAlgorithm {
+public final class A128KwKeyAlgorithm extends JcaAesKwKeyAlgorithm {
 
-    public A128KWKeyAlgorithm(SecretKey secretKey) {
+    public A128KwKeyAlgorithm(SecretKey secretKey) {
         super("A128KW", 128, secretKey);
     }
 }

@@ -80,7 +80,7 @@ public final class JweBuilder {
         KeyManagementMode keyManagementMode = keyAlgorithm.getKeyManagementMode();
         Object key = switch (keyManagementMode) {
             case KEY_WRAPPING, KEY_ENCRYPTION, KEY_AGREEMENT_WITH_KEY_WRAPPING
-                -> encryptionAlgorithm.generateKey(joseHeader);
+                -> encryptionAlgorithm.generateKey();
             case DIRECT_KEY_AGREEMENT, DIRECT_ENCRYPTION
                 -> keyAlgorithm.getKey(joseHeader);
         };

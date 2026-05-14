@@ -104,7 +104,7 @@ public class KeyAlgorithmTest {
         keyGenerator.init(128);
         SecretKey secretKey = keyGenerator.generateKey();
 
-        A128KWKeyAlgorithm alg = new A128KWKeyAlgorithm(secretKey);
+        A128KwKeyAlgorithm alg = new A128KwKeyAlgorithm(secretKey);
         assertEquals("A128KW", alg.getName());
         assertEquals(null, alg.getKey(null));
         assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
@@ -122,7 +122,7 @@ public class KeyAlgorithmTest {
         keyGenerator.init(192);
         SecretKey secretKey = keyGenerator.generateKey();
 
-        A192KWKeyAlgorithm alg = new A192KWKeyAlgorithm(secretKey);
+        A192KwKeyAlgorithm alg = new A192KwKeyAlgorithm(secretKey);
         assertEquals("A192KW", alg.getName());
         assertEquals(null, alg.getKey(null));
         assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
@@ -140,7 +140,7 @@ public class KeyAlgorithmTest {
         keyGenerator.init(256);
         SecretKey secretKey = keyGenerator.generateKey();
 
-        A256KWKeyAlgorithm alg = new A256KWKeyAlgorithm(secretKey);
+        A256KwKeyAlgorithm alg = new A256KwKeyAlgorithm(secretKey);
         assertEquals("A256KW", alg.getName());
         assertEquals(null, alg.getKey(null));
         assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
