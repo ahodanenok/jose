@@ -27,18 +27,18 @@ public final class DirectKeyAlgorithm implements JweKeyAlgorithm {
     }
 
     @Override
-    public Key getKey(JweJoseHeader params) {
+    public Key getContentEncryptionKey(JweJoseHeader joseHeader) {
         return key;
     }
 
     @Override
-    public byte[] encryptKey(Object key, JweJoseHeader params) {
+    public byte[] encryptKey(Key key, JweJoseHeader joseHeader) {
         // todo: impl
         return null;
     }
 
     @Override
-    public Object decryptKey(byte[] key, String keyAlgorithmName, JweJoseHeader params) {
+    public Key decryptKey(byte[] key, String keyAlgorithmName, JweJoseHeader joseHeader) {
         // todo: impl
         return null;
     }

@@ -1,6 +1,7 @@
 package ahodanenok.jose.jwe;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.function.Consumer;
 
 import ahodanenok.jose.common.Base64Url;
 import ahodanenok.jose.common.JsonConverter;
-import ahodanenok.jose.jwe.algorithm.EncryptionResult;
+import ahodanenok.jose.jwe.algorithm.JweEncryptionResult;
 import ahodanenok.jose.jwe.algorithm.JweEncryptionAlgorithm;
 import ahodanenok.jose.jwe.algorithm.JweKeyAlgorithm;
 import ahodanenok.jose.jwe.algorithm.KeyManagementMode;
@@ -78,11 +79,11 @@ public final class JweBuilder {
         JweEncryptionAlgorithm encryptionAlgorithm = getEncryptionAlgorithm(joseHeader);
 
         KeyManagementMode keyManagementMode = keyAlgorithm.getKeyManagementMode();
-        Object key = switch (keyManagementMode) {
+        Key key = switch (keyManagementMode) {
             case KEY_WRAPPING, KEY_ENCRYPTION, KEY_AGREEMENT_WITH_KEY_WRAPPING
                 -> encryptionAlgorithm.generateKey();
             case DIRECT_KEY_AGREEMENT, DIRECT_ENCRYPTION
-                -> keyAlgorithm.getKey(joseHeader);
+                -> keyAlgorithm.getContentEncryptionKey(joseHeader);
         };
 
         String encodedProtectedHeader;
@@ -110,7 +111,7 @@ public final class JweBuilder {
         byte[] payloadUsed = payload;
         // todo: If a "zip" parameter was included, compress the plaintext
 
-        EncryptionResult result = encryptionAlgorithm.encrypt(payloadUsed, key, iv, aad);
+        JweEncryptionResult result = encryptionAlgorithm.encrypt(payloadUsed, key, iv, aad);
         String encodedCiphertext = Base64Url.encode(result.ciphertext(), false);
         String encodedAuthenticationTag = Base64Url.encode(result.authenticationTag(), false);
 
@@ -329,7 +330,7 @@ public final class JweBuilder {
         return jsonConverter.convert(jwe);
     }
 
-    private String encodeEncryptKey(Object key, JweKeyAlgorithm keyAlgorithm, JweJoseHeader joseHeader) {
+    private String encodeEncryptKey(Key key, JweKeyAlgorithm keyAlgorithm, JweJoseHeader joseHeader) {
         KeyManagementMode keyManagementMode = keyAlgorithm.getKeyManagementMode();
         if (keyManagementMode == KeyManagementMode.KEY_WRAPPING
                 || keyManagementMode == KeyManagementMode.KEY_ENCRYPTION

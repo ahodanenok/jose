@@ -62,12 +62,12 @@ public final class RsaOaep256KeyAlgorithm implements JweKeyAlgorithm {
     }
 
     @Override
-    public Object getKey(JweJoseHeader params) {
+    public Key getContentEncryptionKey(JweJoseHeader joseHeader) {
         return null;
     }
 
     @Override
-    public byte[] encryptKey(Object key, JweJoseHeader params) {
+    public byte[] encryptKey(Key key, JweJoseHeader joseHeader) {
         try {
             if (publicKey != null) {
                 cipher.init(Cipher.WRAP_MODE, publicKey, getParam());
@@ -81,14 +81,14 @@ public final class RsaOaep256KeyAlgorithm implements JweKeyAlgorithm {
         }
 
         try {
-            return cipher.wrap((Key) key);
+            return cipher.wrap(key);
         } catch (InvalidKeyException | IllegalBlockSizeException e) {
             throw new JweException("Failed to encrypt the key", e);
         }
     }
 
     @Override
-    public Object decryptKey(byte[] key, String keyAlgorithmName, JweJoseHeader params) {
+    public Key decryptKey(byte[] key, String keyAlgorithmName, JweJoseHeader joseHeader) {
         if (privateKey != null) {
             try {
                 cipher.init(Cipher.UNWRAP_MODE, privateKey, getParam());

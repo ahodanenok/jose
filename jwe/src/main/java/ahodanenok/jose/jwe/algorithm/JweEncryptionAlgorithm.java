@@ -1,14 +1,16 @@
 package ahodanenok.jose.jwe.algorithm;
 
+import java.security.Key;
+
 public interface JweEncryptionAlgorithm {
 
     String getName();
 
-    Object generateKey();
+    Key generateKey();
 
     byte[] generateInitializationVector();
 
-    EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad);
+    JweEncryptionResult encrypt(byte[] payload, Key key, byte[] iv, byte[] aad);
 
-    DecryptionResult decrypt(byte[] payload, Object key, byte[] iv, byte[] aad, byte[] authenticationTag);
+    JweDecryptionResult decrypt(byte[] payload, Key key, byte[] iv, byte[] aad, byte[] authenticationTag);
 }

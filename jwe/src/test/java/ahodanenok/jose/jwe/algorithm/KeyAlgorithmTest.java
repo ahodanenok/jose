@@ -27,7 +27,7 @@ public class KeyAlgorithmTest {
         RsaPkcs1KeyAlgorithm alg = new RsaPkcs1KeyAlgorithm();
 
         assertEquals("RSA1_5", alg.getName());
-        assertEquals(null, alg.getKey(null));
+        assertEquals(null, alg.getContentEncryptionKey(null));
         assertEquals(KeyManagementMode.KEY_ENCRYPTION, alg.getKeyManagementMode());
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -52,7 +52,7 @@ public class KeyAlgorithmTest {
         RsaOaepKeyAlgorithm alg = new RsaOaepKeyAlgorithm();
 
         assertEquals("RSA-OAEP", alg.getName());
-        assertEquals(null, alg.getKey(null));
+        assertEquals(null, alg.getContentEncryptionKey(null));
         assertEquals(KeyManagementMode.KEY_ENCRYPTION, alg.getKeyManagementMode());
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -77,7 +77,7 @@ public class KeyAlgorithmTest {
         RsaOaep256KeyAlgorithm alg = new RsaOaep256KeyAlgorithm();
 
         assertEquals("RSA-OAEP-256", alg.getName());
-        assertEquals(null, alg.getKey(null));
+        assertEquals(null, alg.getContentEncryptionKey(null));
         assertEquals(KeyManagementMode.KEY_ENCRYPTION, alg.getKeyManagementMode());
 
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -106,7 +106,7 @@ public class KeyAlgorithmTest {
 
         A128KwKeyAlgorithm alg = new A128KwKeyAlgorithm(secretKey);
         assertEquals("A128KW", alg.getName());
-        assertEquals(null, alg.getKey(null));
+        assertEquals(null, alg.getContentEncryptionKey(null));
         assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
 
         byte[] encryptedKey = alg.encryptKey(secretKey, null);
@@ -124,7 +124,7 @@ public class KeyAlgorithmTest {
 
         A192KwKeyAlgorithm alg = new A192KwKeyAlgorithm(secretKey);
         assertEquals("A192KW", alg.getName());
-        assertEquals(null, alg.getKey(null));
+        assertEquals(null, alg.getContentEncryptionKey(null));
         assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
 
         byte[] encryptedKey = alg.encryptKey(secretKey, null);
@@ -142,7 +142,7 @@ public class KeyAlgorithmTest {
 
         A256KwKeyAlgorithm alg = new A256KwKeyAlgorithm(secretKey);
         assertEquals("A256KW", alg.getName());
-        assertEquals(null, alg.getKey(null));
+        assertEquals(null, alg.getContentEncryptionKey(null));
         assertEquals(KeyManagementMode.KEY_WRAPPING, alg.getKeyManagementMode());
 
         byte[] encryptedKey = alg.encryptKey(secretKey, null);

@@ -29,21 +29,21 @@ public class EncryptionAlgorithmTest {
         byte[] iv = TestUtils.bytes(0x25, 0x1f, 0xa7, 0x24, 0xf2, 0x13, 0x1e, 0x2c, 0xd0, 0x63, 0x34, 0x6e);
         byte[] aad = TestUtils.bytes(0x01, 0x02, 0x03, 0x04, 0x3, 0x2, 0x01);
 
-        EncryptionResult encryptionResult = alg.encrypt(
+        JweEncryptionResult JweEncryptionResult = alg.encrypt(
             "Hello, world!".getBytes(StandardCharsets.UTF_8), key, iv, aad);
         assertArrayEquals(
             TestUtils.bytes(0xF3, 0xDC, 0x1E, 0x8D, 0xDA, 0x6C, 0x70, 0x03, 0x63, 0xCB, 0xE7, 0x75, 0x46),
-            encryptionResult.ciphertext());
+            JweEncryptionResult.ciphertext());
         assertArrayEquals(
             TestUtils.bytes(0xC1, 0xA3, 0x05, 0x0D, 0x5E, 0xF6, 0x6A, 0x08, 0xC5, 0x43, 0x34, 0xFA, 0x4E, 0xA0, 0x01, 0x97),
-            encryptionResult.authenticationTag());
+            JweEncryptionResult.authenticationTag());
 
-        DecryptionResult decryptionResult = alg.decrypt(
-            encryptionResult.ciphertext(), key, iv, aad, encryptionResult.authenticationTag());
-        assertEquals(true, decryptionResult.authenticated());
+        JweDecryptionResult JweDecryptionResult = alg.decrypt(
+            JweEncryptionResult.ciphertext(), key, iv, aad, JweEncryptionResult.authenticationTag());
+        assertEquals(true, JweDecryptionResult.authenticated());
         assertArrayEquals(
             "Hello, world!".getBytes(StandardCharsets.UTF_8),
-            decryptionResult.plaintext());
+            JweDecryptionResult.plaintext());
     }
 
     @Test
@@ -59,21 +59,21 @@ public class EncryptionAlgorithmTest {
         byte[] iv = TestUtils.bytes(0x04, 0x5f, 0xf2, 0x6a, 0xbd, 0x86, 0xb9, 0xa9, 0x7b, 0x61, 0x2e, 0x26);
         byte[] aad = TestUtils.bytes(0x01, 0x02, 0x03, 0x04, 0x03, 0x02, 0x01);
 
-        EncryptionResult encryptionResult = alg.encrypt(
+        JweEncryptionResult JweEncryptionResult = alg.encrypt(
             "Hello, world!".getBytes(StandardCharsets.UTF_8), key, iv, aad);
         assertArrayEquals(
             TestUtils.bytes(0xBE, 0xC1, 0xEE, 0x28, 0x7D, 0x27, 0xC3, 0xDE, 0x67, 0x51, 0xAF, 0x26, 0x46),
-            encryptionResult.ciphertext());
+            JweEncryptionResult.ciphertext());
         assertArrayEquals(
             TestUtils.bytes(0x22, 0x34, 0x28, 0xB3, 0x37, 0xC1, 0x20, 0x0E, 0x36, 0xEF, 0x2B, 0x05, 0x42, 0x05, 0x66, 0x49),
-            encryptionResult.authenticationTag());
+            JweEncryptionResult.authenticationTag());
 
-        DecryptionResult decryptionResult = alg.decrypt(
-            encryptionResult.ciphertext(), key, iv, aad, encryptionResult.authenticationTag());
-        assertEquals(true, decryptionResult.authenticated());
+        JweDecryptionResult JweDecryptionResult = alg.decrypt(
+            JweEncryptionResult.ciphertext(), key, iv, aad, JweEncryptionResult.authenticationTag());
+        assertEquals(true, JweDecryptionResult.authenticated());
         assertArrayEquals(
             "Hello, world!".getBytes(StandardCharsets.UTF_8),
-            decryptionResult.plaintext());
+            JweDecryptionResult.plaintext());
     }
 
     @Test
@@ -89,21 +89,21 @@ public class EncryptionAlgorithmTest {
         byte[] iv = TestUtils.bytes(0xdb, 0x5f, 0x0d, 0xf8, 0x90, 0xaa, 0x3a, 0x4c, 0xc6, 0xe4, 0x23, 0x23);
         byte[] aad = TestUtils.bytes(0x01, 0x02, 0x03, 0x04, 0x03, 0x02, 0x01);
 
-        EncryptionResult encryptionResult = alg.encrypt(
+        JweEncryptionResult JweEncryptionResult = alg.encrypt(
             "Hello, world!".getBytes(StandardCharsets.UTF_8), key, iv, aad);
         assertArrayEquals(
             TestUtils.bytes(0xD9, 0x44, 0xDB, 0x19, 0xCF, 0xDC, 0x10, 0xAF, 0x16, 0xB4, 0xBC, 0xA9, 0xA9),
-            encryptionResult.ciphertext());
+            JweEncryptionResult.ciphertext());
         assertArrayEquals(
             TestUtils.bytes(0x36, 0x3B, 0x5D, 0x6F, 0xB8, 0x4F, 0xFB, 0x38, 0xE2, 0xFD, 0x22, 0x59, 0xF6, 0x27, 0x13, 0x07),
-            encryptionResult.authenticationTag());
+            JweEncryptionResult.authenticationTag());
 
-        DecryptionResult decryptionResult = alg.decrypt(
-            encryptionResult.ciphertext(), key, iv, aad, encryptionResult.authenticationTag());
-        assertEquals(true, decryptionResult.authenticated());
+        JweDecryptionResult JweDecryptionResult = alg.decrypt(
+            JweEncryptionResult.ciphertext(), key, iv, aad, JweEncryptionResult.authenticationTag());
+        assertEquals(true, JweDecryptionResult.authenticated());
         assertArrayEquals(
             "Hello, world!".getBytes(StandardCharsets.UTF_8),
-            decryptionResult.plaintext());
+            JweDecryptionResult.plaintext());
     }
 
     @Test
@@ -121,18 +121,18 @@ public class EncryptionAlgorithmTest {
         byte[] aad = TestUtils.bytes(101, 121, 74, 104, 98, 71, 99, 105, 79, 105, 74, 66, 77, 84, 73, 52, 83, 49, 99, 105, 76, 67, 74, 108, 98, 109, 77, 105, 79, 105, 74, 66, 77, 84, 73, 52, 81, 48, 74, 68, 76, 85, 104, 84, 77, 106, 85, 50, 73, 110, 48);
         byte[] plaintext = TestUtils.bytes(76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32, 112, 114, 111, 115, 112, 101, 114, 46);
 
-        EncryptionResult encryptionResult = alg.encrypt(plaintext, key, iv, aad);
+        JweEncryptionResult JweEncryptionResult = alg.encrypt(plaintext, key, iv, aad);
         assertArrayEquals(
             TestUtils.bytes(40, 57, 83, 181, 119, 33, 133, 148, 198, 185, 243, 24, 152, 230, 6, 75, 129, 223, 127, 19, 210, 82, 183, 230, 168, 33, 215, 104, 143, 112, 56, 102),
-            encryptionResult.ciphertext());
+            JweEncryptionResult.ciphertext());
         assertArrayEquals(
             TestUtils.bytes(83, 73, 191, 98, 104, 205, 211, 128, 201, 189, 199, 133, 32, 38, 194, 85),
-            encryptionResult.authenticationTag());
+            JweEncryptionResult.authenticationTag());
 
-        DecryptionResult decryptionResult = alg.decrypt(
-            encryptionResult.ciphertext(), key, iv, aad, encryptionResult.authenticationTag());
-        assertEquals(true, decryptionResult.authenticated());
-        assertArrayEquals(plaintext, decryptionResult.plaintext());
+        JweDecryptionResult JweDecryptionResult = alg.decrypt(
+            JweEncryptionResult.ciphertext(), key, iv, aad, JweEncryptionResult.authenticationTag());
+        assertEquals(true, JweDecryptionResult.authenticated());
+        assertArrayEquals(plaintext, JweDecryptionResult.plaintext());
     }
 
     @Test
@@ -149,17 +149,17 @@ public class EncryptionAlgorithmTest {
         byte[] aad = TestUtils.bytes(0x74, 0x7b, 0x0a, 0x0d, 0x8c, 0x0d, 0xe7, 0x1c);
         byte[] plaintext = "Hello, world!".getBytes(StandardCharsets.UTF_8);
 
-        EncryptionResult encryptionResult = alg.encrypt(plaintext, key, iv, aad);
+        JweEncryptionResult JweEncryptionResult = alg.encrypt(plaintext, key, iv, aad);
         assertArrayEquals(
             TestUtils.bytes(0x03, 0xd4, 0x62, 0x34, 0xed, 0xc2, 0x25, 0x5a, 0xd6, 0x35, 0xaa, 0xf2, 0x53, 0x61, 0xef, 0x79),
-            encryptionResult.ciphertext());
+            JweEncryptionResult.ciphertext());
         assertArrayEquals(
             TestUtils.bytes(0xe3, 0x9b, 0x1e, 0x3d, 0x09, 0xc6, 0x3e, 0x14, 0x2b, 0x8d, 0xfa, 0x60, 0xe3, 0x72, 0x57, 0x0c, 0x09, 0x09, 0x06, 0xef, 0x66, 0xcc, 0xcc, 0x42),
-            encryptionResult.authenticationTag());
+            JweEncryptionResult.authenticationTag());
 
-        DecryptionResult decryptionResult = alg.decrypt(
-            encryptionResult.ciphertext(), key, iv, aad, encryptionResult.authenticationTag());
-        assertEquals(true, decryptionResult.authenticated());
-        assertArrayEquals(plaintext, decryptionResult.plaintext());
+        JweDecryptionResult JweDecryptionResult = alg.decrypt(
+            JweEncryptionResult.ciphertext(), key, iv, aad, JweEncryptionResult.authenticationTag());
+        assertEquals(true, JweDecryptionResult.authenticated());
+        assertArrayEquals(plaintext, JweDecryptionResult.plaintext());
     }
 }

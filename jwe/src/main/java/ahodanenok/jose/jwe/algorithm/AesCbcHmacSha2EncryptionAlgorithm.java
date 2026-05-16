@@ -18,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import ahodanenok.jose.jwe.JweException;
 
-class ACbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorithm {
+abstract class AesCbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorithm {
 
     private final String name;
     private final int keySize;     // K
@@ -30,7 +30,7 @@ class ACbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorithm {
     private final SecureRandom random;
     private final ByteBuffer aadLengthBuffer;
 
-    ACbcHmacSha2EncryptionAlgorithm(String jweAlgorithmName, String jcaMacAlgorithmName, int encKeySize, int macKeySize, int authTagSize, SecureRandom random) {
+    AesCbcHmacSha2EncryptionAlgorithm(String jweAlgorithmName, String jcaMacAlgorithmName, int encKeySize, int macKeySize, int authTagSize, SecureRandom random) {
         this.name = jweAlgorithmName;
         try {
             this.cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -66,17 +66,14 @@ class ACbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorithm {
     }
 
     @Override
-    public EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad) {
-        byte[] keyEncoded = ((Key) key).getEncoded();
+    public JweEncryptionResult encrypt(byte[] payload, Key key, byte[] iv, byte[] aad) {
+        byte[] keyEncoded = (key).getEncoded();
         if (keyEncoded.length != keySize) {
             throw new JweException(
                 "Invalid key, expected %d bytes, got %d"
                     .formatted(keySize, keyEncoded.length));
         }
 
-// System.out.println("!!! keyEncoded.length=" + keyEncoded);
-// System.out.println("!!! macKeySize=" + macKeySize);
-// System.out.println("!!! macKeySize=" + macKeySize);
         try {
             cipher.init(
                 Cipher.ENCRYPT_MODE,
@@ -105,12 +102,12 @@ class ACbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorithm {
         mac.update(aadLengthBuffer.array());
         byte[] authenticationTag = Arrays.copyOf(mac.doFinal(), authTagSize);
 
-        return new EncryptionResult(ciphertext, authenticationTag);
+        return new JweEncryptionResult(ciphertext, authenticationTag);
     }
 
     @Override
-    public DecryptionResult decrypt(byte[] ciphertext, Object key, byte[] iv, byte[] aad, byte[] authenticationTag) {
-        byte[] keyEncoded = ((Key) key).getEncoded();
+    public JweDecryptionResult decrypt(byte[] ciphertext, Key key, byte[] iv, byte[] aad, byte[] authenticationTag) {
+        byte[] keyEncoded = key.getEncoded();
         if (keyEncoded.length != keySize) {
             // https://datatracker.ietf.org/doc/html/rfc7516#section-11.5
             keyEncoded = new byte[keySize];
@@ -129,7 +126,7 @@ class ACbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorithm {
         aadLengthBuffer.putLong(aad.length * 8L);
         mac.update(aadLengthBuffer.array());
         if (!Arrays.equals(Arrays.copyOf(mac.doFinal(), authTagSize), authenticationTag)) {
-            return new DecryptionResult(null, false);
+            return new JweDecryptionResult(null, false);
         };
 
         try {
@@ -142,7 +139,7 @@ class ACbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorithm {
         }
 
         try {
-            return new DecryptionResult(cipher.doFinal(ciphertext), true);
+            return new JweDecryptionResult(cipher.doFinal(ciphertext), true);
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             throw new JweException("Failed to decrypt ciphertext", e);
         }

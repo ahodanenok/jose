@@ -19,15 +19,15 @@ import javax.crypto.spec.GCMParameterSpec;
 
 import ahodanenok.jose.jwe.JweException;
 
-abstract class AGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
+abstract class AesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
 
     private final String jweAlgorithmName;
     private final int keySize;
     private final Cipher cipher;
     private final KeyGenerator keyGenerator;
-    private JweRandom random;
+    private SecureRandom random;
 
-    AGcmEncryptionAlgorithm(String jweAlgorithmName, int keySize) {
+    AesGcmEncryptionAlgorithm(String jweAlgorithmName, int keySize) {
         this.jweAlgorithmName = jweAlgorithmName;
         this.keySize = keySize;
         try {
@@ -36,10 +36,10 @@ abstract class AGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             throw new JweException("The algorithm '%s' is not supported".formatted(jweAlgorithmName), e);
         }
-        this.random = JweRandom.from(new SecureRandom());
+        this.random = new SecureRandom();
     }
 
-    AGcmEncryptionAlgorithm(String jweAlgorithmName, int keySize, String random, String provider) {
+    AesGcmEncryptionAlgorithm(String jweAlgorithmName, int keySize, String random, String provider) {
         this.jweAlgorithmName = jweAlgorithmName;
         this.keySize = keySize;
         try {
@@ -49,13 +49,13 @@ abstract class AGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
             throw new JweException("The algorithm '%s' is not supported".formatted(jweAlgorithmName), e);
         }
         try {
-            this.random = JweRandom.from(SecureRandom.getInstance(random, provider));
+            this.random = SecureRandom.getInstance(random, provider);
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw new JweException("SecureRandom for the algorithm '%s' not found".formatted(random), e);
         }
     }
 
-    public final AGcmEncryptionAlgorithm useRandom(JweRandom random) {
+    public final AesGcmEncryptionAlgorithm useRandom(SecureRandom random) {
         this.random = Objects.requireNonNull(random);
         return this;
     }
@@ -66,7 +66,7 @@ abstract class AGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
     }
 
     @Override
-    public final Object generateKey() {
+    public final Key generateKey() {
         keyGenerator.init(keySize);
         return keyGenerator.generateKey();
     }
@@ -74,16 +74,12 @@ abstract class AGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
     @Override
     public final byte[] generateInitializationVector() {
         byte[] iv = new byte[12];
-        random.randomBytes(iv);
+        random.nextBytes(iv);
         return iv;
     }
 
     @Override
-    public final EncryptionResult encrypt(byte[] payload, Object key, byte[] iv, byte[] aad) {
-        if (!(key instanceof Key)) {
-            throw new JweException("Invalid key, must be an instance of java.security.Key");
-        }
-
+    public final JweEncryptionResult encrypt(byte[] payload, Key key, byte[] iv, byte[] aad) {
         try {
             cipher.init(Cipher.ENCRYPT_MODE, (Key) key, new GCMParameterSpec(128, iv));
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
@@ -96,14 +92,14 @@ abstract class AGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             throw new JweException("Failed to encrypt payload", e);
         }
-        return new EncryptionResult(
+        return new JweEncryptionResult(
             Arrays.copyOfRange(result, 0, result.length - 16),
             Arrays.copyOfRange(result, result.length - 16, result.length)
         );
     }
 
     @Override
-    public final DecryptionResult decrypt(byte[] payload, Object key, byte[] iv, byte[] aad, byte[] authenticationTag) {
+    public final JweDecryptionResult decrypt(byte[] payload, Key key, byte[] iv, byte[] aad, byte[] authenticationTag) {
         try {
             cipher.init(Cipher.DECRYPT_MODE, (Key) key, new GCMParameterSpec(128, iv));
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
@@ -112,9 +108,9 @@ abstract class AGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
         cipher.updateAAD(aad);
         try {
             cipher.update(payload);
-            return new DecryptionResult(cipher.doFinal(authenticationTag), true);
+            return new JweDecryptionResult(cipher.doFinal(authenticationTag), true);
         } catch (AEADBadTagException e) {
-            return new DecryptionResult(null, false);
+            return new JweDecryptionResult(null, false);
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             throw new JweException("Failed to decrypt payload", e);
         }

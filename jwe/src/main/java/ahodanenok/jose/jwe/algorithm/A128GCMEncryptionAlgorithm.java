@@ -3,7 +3,7 @@ package ahodanenok.jose.jwe.algorithm;
 /**
  * AES GCM using 128-bit key
  */
-public final class A128GcmEncryptionAlgorithm extends AGcmEncryptionAlgorithm {
+public final class A128GcmEncryptionAlgorithm extends AesGcmEncryptionAlgorithm {
 
     public A128GcmEncryptionAlgorithm() {
         super("A128GCM", 128);
