@@ -8,6 +8,8 @@ public interface JweEncryptionAlgorithm {
 
     Key generateKey();
 
+    String getKeyAlgorithmName();
+
     byte[] generateInitializationVector();
 
     JweEncryptionResult encrypt(byte[] payload, Key key, byte[] iv, byte[] aad);

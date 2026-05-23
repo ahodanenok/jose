@@ -72,6 +72,11 @@ abstract class AesGcmEncryptionAlgorithm implements JweEncryptionAlgorithm {
     }
 
     @Override
+    public final String getKeyAlgorithmName() {
+        return "AES";
+    }
+
+    @Override
     public final byte[] generateInitializationVector() {
         byte[] iv = new byte[12];
         random.nextBytes(iv);

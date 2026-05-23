@@ -59,6 +59,11 @@ abstract class AesCbcHmacSha2EncryptionAlgorithm implements JweEncryptionAlgorit
     }
 
     @Override
+    public final String getKeyAlgorithmName() {
+        return name;
+    }
+
+    @Override
     public final byte[] generateInitializationVector() {
         byte[] bytes = new byte[16];
         random.nextBytes(bytes);
