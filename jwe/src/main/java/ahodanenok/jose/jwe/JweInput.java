@@ -2,8 +2,6 @@ package ahodanenok.jose.jwe;
 
 public interface JweInput {
 
-    boolean isValid();
-
     byte[] getPayload();
 
     JweHeader getProtectedHeader();
@@ -13,6 +11,18 @@ public interface JweInput {
     JweHeader getRecipientHeader();
 
     JweHeader getRecipientHeader(int idx);
+
+    /**
+     * Check if the payload was successfulyl validated for the first recipient
+     */
+    boolean isRecipientValid();
+
+    /**
+     * Check if the payload was successfulyl validated for the recipient
+     *
+     * @param idx recipient index
+     */
+    boolean isRecipientValid(int idx);
 
     int getRecipientCount();
 

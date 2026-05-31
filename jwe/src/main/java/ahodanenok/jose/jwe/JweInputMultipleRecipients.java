@@ -2,12 +2,12 @@ package ahodanenok.jose.jwe;
 
 import ahodanenok.jose.common.Utils;
 
-class JweInputOneRecipient implements JweInput {
+class JweInputMultipleRecipients implements JweInput {
 
     private final Jwe jwe;
-    private final boolean valid;
+    private final boolean[] valid;
 
-    JweInputOneRecipient(Jwe jwe, boolean valid) {
+    JweInputMultipleRecipients(Jwe jwe, boolean[] valid) {
         this.jwe = jwe;
         this.valid = valid;
     }
@@ -39,13 +39,13 @@ class JweInputOneRecipient implements JweInput {
 
     @Override
     public boolean isRecipientValid() {
-        return valid;
+        return valid[0];
     }
 
     @Override
     public boolean isRecipientValid(int idx) {
-        Utils.checkBounds(idx, 0, 1);
-        return valid;
+        Utils.checkBounds(idx, 0, valid.length);
+        return valid[idx];
     }
 
     @Override
